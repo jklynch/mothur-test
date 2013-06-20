@@ -39,7 +39,7 @@ LIBS = \
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = hello_test svm_test
+TESTS = svm_test
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -77,32 +77,8 @@ gtest.a : gtest-all.o
 gtest_main.a : gtest-all.o gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
-# Builds a sample test.  A test should link with either gtest.a or
-# gtest_main.a, depending on whether it defines its own main()
-# function.
-
-hello.o : $(USER_DIR)/hello.cpp $(USER_DIR)/hello.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/hello.cpp
-
-hello_test.o : $(USER_DIR)/hello_test.cpp \
-                     $(USER_DIR)/hello.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/hello_test.cpp
-
 # moved -lpthread to end of line since I use an Ubuntu-derived Linux
 # see issue 391 on googletest website
-hello_test : hello.o hello_test.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread
-
-###############
-# build a test for the mothur classifysharedcommand
-# this is not working - there are many dependencies
-#classifysharedcommand_test.o : $(USER_DIR)/classifysharedcommand_test.cpp \
-#                $(MOTHUR_DIR)/classifysharedcommand.h $(GTEST_HEADERS)
-#	$(CXX) $(CPPFLAGS) -I$(MOTHUR_DIR) $(CXXFLAGS) -c $(USER_DIR)/classifysharedcommand_test.cpp
-#
-#classifysharedcommand_test : $(MOTHUR_DIR)/classifysharedcommand.o $(MOTHUR_DIR)/mothurout.o $(MOTHUR_DIR)/abstractdecisiontree.o $(MOTHUR_DIR)/inputdata.o classifysharedcommand_test.o gtest_main.a
-#	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread $(LIBS)
-################
 
 # build a test for classes in the mothur svm.cpp file
 svm_test.o : $(USER_DIR)/svm_test.cpp $(GTEST_HEADERS)
