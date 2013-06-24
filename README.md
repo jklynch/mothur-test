@@ -1,7 +1,7 @@
 mothur-test
 ===========
 
-The mothur-test make file will work if mothur-test, mothur and gtest are under one directory.  Download and unzip gtest-1.6.0.zip from the googletest website http://code.google.com/p/googletest/.
+The mothur-test make file will work if mothur-test, mothur and gtest are under the same directory.  Download and unzip gtest-1.6.0.zip from the googletest website http://code.google.com/p/googletest/.
 
 parent/
        gtest-1.6.0/
