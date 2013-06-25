@@ -32,6 +32,14 @@ TEST(SvmTest, ReadData) {
     //std::vector<std::vector<double> > observations(numObservations, std::vector<double> (numFeatures, 0.0));
 }
 
+TEST(FeatureVector, Construct) {
+    FeatureVector fv(2);
+    EXPECT_EQ(2, fv.size());
+    fv[0] = 0.0;
+    fv[1] = 0.0;
+    EXPECT_EQ(2, fv.size());
+}
+
 TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
     LabelVector labelVector;
     labelVector.push_back("label_0");
@@ -42,9 +50,19 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
     labelVector.push_back("label_1");
     LabelSet expectedLabelSet;
     expectedLabelSet.insert(labelVector.begin(), labelVector.end());
-    LabelSet labelSet;
-    OneVsOneMultiClassSvmTrainer t;
-    t.getLabelSet(labelSet, labelVector);
+    //LabelSet labelSet;
+
+    FeatureVector featureVector;
+    ObservationVector observations;
+    observations.push_back(&featureVector);
+    observations.push_back(&featureVector);
+    observations.push_back(&featureVector);
+    observations.push_back(&featureVector);
+    observations.push_back(&featureVector);
+    observations.push_back(&featureVector);
+    OneVsOneMultiClassSvmTrainer t(observations, labelVector);
+
+    const LabelSet& labelSet = t.getLabelSet();
 
     EXPECT_EQ(expectedLabelSet.size(), labelSet.size());
     EXPECT_EQ(expectedLabelSet, labelSet);
