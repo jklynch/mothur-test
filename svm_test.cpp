@@ -77,6 +77,11 @@ TEST(SmoTrainer, MoreThanTwoLabels) {
     EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector), std::exception);
 }
 
+// test SmoTrainer on four data points
+//
+// 1 * *
+// 0 * *
+//   012
 TEST(SmoTrainer, Train) {
     LabelVector labelVector;
     labelVector.push_back("label_0");
