@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 
 #include "mothur/mothurout.h"
+#include "mothur/groupmap.h"
 #include "mothur/inputdata.h"
 
 #include "mothur/svm.hpp"
@@ -49,8 +50,11 @@ TEST(SmoTrainer, AssignNumericLabels) {
     labelVector.push_back("label_2");
 
     std::vector<double> y(4);
+    NumericClassToLabel discriminantToLabel;
+    discriminantToLabel[-1] = "label_0";
+    discriminantToLabel[+1] = "label_1";
     SmoTrainer t;
-    t.assignNumericLabels(y, labelVector);
+    t.assignNumericLabels(y, labelVector, discriminantToLabel);
 
     EXPECT_EQ(4, y.size());
     EXPECT_EQ(-1.0, y[0]);
@@ -73,16 +77,15 @@ TEST(SmoTrainer, MoreThanTwoLabels) {
     threeLabelsVector.push_back("label_2");
 
     std::vector<double> y(3);
+    NumericClassToLabel discriminantToLabel;
+    discriminantToLabel[-1] = "label_0";
+    discriminantToLabel[+1] = "label_1";
     SmoTrainer t;
-    EXPECT_THROW(t.assignNumericLabels(y, oneLabelVector), std::exception);
-    EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector), std::exception);
+    EXPECT_THROW(t.assignNumericLabels(y, oneLabelVector, discriminantToLabel), std::exception);
+    EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector, discriminantToLabel), std::exception);
 }
 
-// test SmoTrainer on four data points
-//
-// 1 + *
-// 0 + *
-//   012
+// test SmoTrainer on eight data points
 TEST(SmoTrainer, Train) {
     LabelVector labelVector;
     labelVector.push_back("blue");
@@ -137,28 +140,7 @@ TEST(SmoTrainer, Train) {
     std::cout << "observation count: " << observationVector.size() << std::endl;
     std::cout << "feature count: " << observationVector[0]->size() << std::endl;
 
-    // online method for mean and variance
-    for ( FeatureVector::size_type feature = 0; feature < observationVector[0]->size(); feature++ ) {
-        double n = 0.0;
-        double mean = 0.0;
-        double M2 = 0.0;
-        for ( ObservationVector::size_type observation = 0; observation < observationVector.size(); observation++ ) {
-            n += 1.0;
-            double x = observationVector[observation]->at(feature);
-            double delta = x - mean;
-            mean += delta / n;
-            M2 += delta * (x - mean);
-        }
-        double variance = M2 / (n - 1.0);
-        double standardDeviation = sqrt(variance);
-        std::cout << "mean of feature " << feature << " is " << mean << std::endl;
-        std::cout << "std of feature " << feature << " is " << standardDeviation << std::endl;
-        // normalize the feature
-        for ( ObservationVector::size_type observation = 0; observation < observationVector.size(); observation++ ) {
-            observationVector[observation]->at(feature) = (observationVector[observation]->at(feature) - mean ) / standardDeviation;
-        }
-    }
-
+    OneVsOneMultiClassSvmTrainer::standardizeObservations(observationVector);
     for ( ObservationVector::size_type i = 0; i < observationVector.size(); i++ ) {
         std::cout << "i = " << i;
         for ( FeatureVector::size_type j = 0; j < observationVector[0]->size(); j++ ) {
@@ -171,12 +153,15 @@ TEST(SmoTrainer, Train) {
     SmoTrainer t;
     SVM* svm = t.train(observationVector, labelVector);
 
-    //EXPECT_EQ(-1, svm->discriminant(x_01));
-    //EXPECT_EQ(1, svm->discriminant(x_02));
-    //EXPECT_EQ(1, svm->discriminant(x_21));
-    //EXPECT_EQ(1, svm->discriminant(x_21));
+    EXPECT_EQ(-1, svm->discriminant(x_blue_0));
+    EXPECT_EQ( 1, svm->discriminant(x_green_0));
+    EXPECT_EQ(-1, svm->discriminant(x_blue_1));
+    EXPECT_EQ( 1, svm->discriminant(x_green_1));
 
-    //delete svm;
+    EXPECT_EQ("blue", svm->classify(x_blue_0));
+    EXPECT_EQ("green", svm->classify(x_green_0));
+
+    delete svm;
 }
 
 
@@ -216,4 +201,49 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
 
     EXPECT_EQ(expectedLabelSet.size(), labelSet.size());
     EXPECT_EQ(expectedLabelSet, labelSet);
+}
+
+TEST(OneVsOneMultiClassSvmTrainer, FisherIrisData) {
+    LabelVector labelVector;
+    ObservationVector observationVector;
+
+    int i = 0;
+    InputData input("iris.shared", "sharedfile");
+    vector<SharedRAbundVector*> lookup = input.getSharedRAbundVectors();
+    while ( lookup[0] != NULL ) {
+        i++;
+        vector<individual> data = lookup[0]->getData();
+        FeatureVector* featureVector = new FeatureVector(data.size(), 0.0);
+        observationVector.push_back(featureVector);
+        labelVector.push_back(lookup[0]->getGroup());
+        //std::cout << i << " label : " << lookup[0]->getLabel() << " group: " << lookup[0]->getGroup();
+        for (int j = 0; j < data.size(); j++) {
+            //std::cout << " abundance " << data[j].abundance;
+            featureVector->at(j) = double(data[j].abundance);
+        }
+        //std::cout << std::endl;
+        delete lookup[0];
+        lookup[0] = NULL;
+        lookup = input.getSharedRAbundVectors();
+    }
+    EXPECT_EQ(150, i);
+    EXPECT_EQ("setosa", labelVector[0]);
+    EXPECT_EQ("versicolor", labelVector[50]);
+    EXPECT_EQ("virginica", labelVector[100]);
+
+    OneVsOneMultiClassSvmTrainer t(observationVector, labelVector);
+    EXPECT_EQ(50, t.getLabeledObservations()["setosa"]->size());
+    EXPECT_EQ(50, t.getLabeledObservations()["versicolor"]->size());
+    EXPECT_EQ(50, t.getLabeledObservations()["virginica"]->size());
+
+    EXPECT_EQ(3, t.getLabelPairSet().size());
+
+    MultiClassSVM* s = t.train();
+
+    delete s;
+
+    for ( int j = 0; j < observationVector.size(); j++ ) {
+        delete observationVector[j];
+    }
+
 }
