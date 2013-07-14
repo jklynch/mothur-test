@@ -197,26 +197,67 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelSet) {
     EXPECT_EQ(1, labelSet.count("green"));
 }
 
-TEST(OneVsOneMultiClassSvmTrainer, buildLabelToObservationVector) {
-    //static void buildLabelToObservationVector(LabelToObservationVector&, const LabeledObservationVector&);
+// Build a label-to-labeled-observation-vector from a list
+// of four observations with three different labels.
+TEST(OneVsOneMultiClassSvmTrainer, buildLabelToLabeledObservationVector) {
+    Observation x1;
+    Observation x2;
+    Observation x3;
+    Observation x4;
+
+    LabeledObservationVector X;
+    X.push_back(make_pair("blue", &x1));
+    X.push_back(make_pair("green", &x2));
+    X.push_back(make_pair("blue", &x3));
+    X.push_back(make_pair("red", &x4));
+
+    LabelToLabeledObservationVector labelToLabeledObservationVector;
+    OneVsOneMultiClassSvmTrainer::buildLabelToLabeledObservationVector(labelToLabeledObservationVector, X);
+
+    EXPECT_EQ(2, labelToLabeledObservationVector["blue"].size());
+    EXPECT_EQ("blue", labelToLabeledObservationVector["blue"][0].first);
+    EXPECT_EQ(&x1, labelToLabeledObservationVector["blue"][0].second);
+    EXPECT_EQ("blue", labelToLabeledObservationVector["blue"][1].first);
+    EXPECT_EQ(&x3, labelToLabeledObservationVector["blue"][1].second);
+
+    EXPECT_EQ(1, labelToLabeledObservationVector["green"].size());
+    EXPECT_EQ("green", labelToLabeledObservationVector["green"][0].first);
+    EXPECT_EQ(&x2, labelToLabeledObservationVector["green"][0].second);
+
+    EXPECT_EQ(1, labelToLabeledObservationVector["red"].size());
+    EXPECT_EQ("red", labelToLabeledObservationVector["red"][0].first);
+    EXPECT_EQ(&x4, labelToLabeledObservationVector["red"][0].second);
 }
 
+// Build a label pair set with one pair and another with three pairs.
 TEST(OneVsOneMultiClassSvmTrainer, buildLabelPairSet) {
     Observation x1;
     Observation x2;
     Observation x3;
+    Observation x4;
 
     LabeledObservationVector X;
     X.push_back(make_pair("blue", &x1));
     X.push_back(make_pair("green", &x2));
     X.push_back(make_pair("blue", &x3));
 
-    LabelPairSet labelPairSet;
+    LabelPairSet onePairLabelPairSet;
 
-    OneVsOneMultiClassSvmTrainer::buildLabelPairSet(labelPairSet, X);
+    OneVsOneMultiClassSvmTrainer::buildLabelPairSet(onePairLabelPairSet, X);
 
-    EXPECT_EQ(1, labelPairSet.size());
-    EXPECT_EQ(1, labelPairSet.count(std::make_pair("blue","green")));
+    EXPECT_EQ(1, onePairLabelPairSet.size());
+    EXPECT_EQ(1, onePairLabelPairSet.count(make_label_pair("blue","green")));
+
+    X.push_back(make_pair("red", &x4));
+
+    LabelPairSet threePairsLabelPairSet;
+
+    OneVsOneMultiClassSvmTrainer::buildLabelPairSet(threePairsLabelPairSet, X);
+
+    EXPECT_EQ(3, threePairsLabelPairSet.size());
+    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("blue","green")));
+    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("blue","red")));
+    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("green","red")));
 }
 
 TEST(OneVsOneMultiClassSvmTrainer, appendTrainingAndTestingData) {
