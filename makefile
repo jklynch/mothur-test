@@ -39,7 +39,7 @@ LIBS = \
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = svm_test
+TESTS = svm_test svm_iris_test svm_hmp_test svm_wtmice_test
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -80,14 +80,51 @@ gtest_main.a : gtest-all.o gtest_main.o
 # moved -lpthread to end of line since I use an Ubuntu-derived Linux
 # see issue 391 on googletest website
 
-# build a test for classes in the mothur svm.cpp file
+# build unit tests for classes in the mothur svm.cpp file
 svm_test.o : $(USER_DIR)/svm_test.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) -I$(MOTHUR_INC_DIR) $(CXXFLAGS) -c $(USER_DIR)/svm_test.cpp
+
+svm_iris_test.o : $(USER_DIR)/svm_iris_test.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) -I$(MOTHUR_INC_DIR) $(CXXFLAGS) -c $(USER_DIR)/svm_iris_test.cpp
+
+svm_hmp_test.o : $(USER_DIR)/svm_hmp_test.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) -I$(MOTHUR_INC_DIR) $(CXXFLAGS) -c $(USER_DIR)/svm_hmp_test.cpp
+
+svm_wtmice_test.o : $(USER_DIR)/svm_wtmice_test.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) -I$(MOTHUR_INC_DIR) $(CXXFLAGS) -c $(USER_DIR)/svm_wtmice_test.cpp
 
 svm_test : $(MOTHUR_DIR)/mothurout.o $(MOTHUR_DIR)/inputdata.o \
         $(MOTHUR_DIR)/calculator.o $(MOTHUR_DIR)/groupmap.o $(MOTHUR_DIR)/counttable.o \
         $(MOTHUR_DIR)/listvector.o $(MOTHUR_DIR)/sharedlistvector.o $(MOTHUR_DIR)/ordervector.o $(MOTHUR_DIR)/sharedordervector.o \
         $(MOTHUR_DIR)/rabundvector.o $(MOTHUR_DIR)/sharedrabundvector.o $(MOTHUR_DIR)/sharedrabundfloatvector.o $(MOTHUR_DIR)/sabundvector.o $(MOTHUR_DIR)/sharedsabundvector.o \
-        $(MOTHUR_DIR)/sharedutilities.o \
+        $(MOTHUR_DIR)/classifysvmsharedcommand.o \
+        $(MOTHUR_DIR)/optionparser.o $(MOTHUR_DIR)/sharedutilities.o $(MOTHUR_DIR)/validparameter.o \
         $(MOTHUR_DIR)/svm.o svm_test.o gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread
+
+svm_iris_test : $(MOTHUR_DIR)/mothurout.o $(MOTHUR_DIR)/inputdata.o \
+        $(MOTHUR_DIR)/calculator.o $(MOTHUR_DIR)/groupmap.o $(MOTHUR_DIR)/counttable.o \
+        $(MOTHUR_DIR)/listvector.o $(MOTHUR_DIR)/sharedlistvector.o $(MOTHUR_DIR)/ordervector.o $(MOTHUR_DIR)/sharedordervector.o \
+        $(MOTHUR_DIR)/rabundvector.o $(MOTHUR_DIR)/sharedrabundvector.o $(MOTHUR_DIR)/sharedrabundfloatvector.o $(MOTHUR_DIR)/sabundvector.o $(MOTHUR_DIR)/sharedsabundvector.o \
+        $(MOTHUR_DIR)/classifysvmsharedcommand.o \
+        $(MOTHUR_DIR)/optionparser.o $(MOTHUR_DIR)/sharedutilities.o $(MOTHUR_DIR)/validparameter.o \
+        $(MOTHUR_DIR)/svm.o svm_iris_test.o gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread
+
+svm_hmp_test : $(MOTHUR_DIR)/mothurout.o $(MOTHUR_DIR)/inputdata.o \
+        $(MOTHUR_DIR)/calculator.o $(MOTHUR_DIR)/groupmap.o $(MOTHUR_DIR)/counttable.o \
+        $(MOTHUR_DIR)/listvector.o $(MOTHUR_DIR)/sharedlistvector.o $(MOTHUR_DIR)/ordervector.o $(MOTHUR_DIR)/sharedordervector.o \
+        $(MOTHUR_DIR)/rabundvector.o $(MOTHUR_DIR)/sharedrabundvector.o $(MOTHUR_DIR)/sharedrabundfloatvector.o $(MOTHUR_DIR)/sabundvector.o $(MOTHUR_DIR)/sharedsabundvector.o \
+        $(MOTHUR_DIR)/classifysvmsharedcommand.o \
+        $(MOTHUR_DIR)/optionparser.o $(MOTHUR_DIR)/sharedutilities.o $(MOTHUR_DIR)/validparameter.o \
+        $(MOTHUR_DIR)/svm.o svm_hmp_test.o gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread
+
+svm_wtmice_test : $(MOTHUR_DIR)/mothurout.o $(MOTHUR_DIR)/inputdata.o \
+        $(MOTHUR_DIR)/calculator.o $(MOTHUR_DIR)/groupmap.o $(MOTHUR_DIR)/counttable.o \
+        $(MOTHUR_DIR)/listvector.o $(MOTHUR_DIR)/sharedlistvector.o $(MOTHUR_DIR)/ordervector.o $(MOTHUR_DIR)/sharedordervector.o \
+        $(MOTHUR_DIR)/rabundvector.o $(MOTHUR_DIR)/sharedrabundvector.o $(MOTHUR_DIR)/sharedrabundfloatvector.o $(MOTHUR_DIR)/sabundvector.o $(MOTHUR_DIR)/sharedsabundvector.o \
+        $(MOTHUR_DIR)/classifysvmsharedcommand.o \
+        $(MOTHUR_DIR)/optionparser.o $(MOTHUR_DIR)/sharedutilities.o $(MOTHUR_DIR)/validparameter.o \
+        $(MOTHUR_DIR)/svm.o svm_wtmice_test.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ -lpthread

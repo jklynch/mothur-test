@@ -24,14 +24,14 @@ TEST(OneVsOneMultiClassSvmTrainer, FisherIrisData) {
     ClassifySvmSharedCommand::readSharedAndDesignFiles("iris.shared", "iris.design", labeledObservationVector);
 
     EXPECT_EQ(150, labeledObservationVector.size());
-    EXPECT_EQ("0", labeledObservationVector[0].first);   // setosa
-    EXPECT_EQ("1", labeledObservationVector[50].first);  // versicolor
-    EXPECT_EQ("2", labeledObservationVector[100].first); // virginica
+    EXPECT_EQ("setosa", labeledObservationVector[0].first);   // setosa
+    EXPECT_EQ("versicolor", labeledObservationVector[50].first);  // versicolor
+    EXPECT_EQ("virginica", labeledObservationVector[100].first); // virginica
 
     OneVsOneMultiClassSvmTrainer t(labeledObservationVector);
-    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("0").size());
-    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("1").size());
-    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("2").size());
+    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("setosa").size());
+    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("versicolor").size());
+    EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("virginica").size());
 
     EXPECT_EQ(3, t.getLabelPairSet().size());
 
@@ -40,9 +40,7 @@ TEST(OneVsOneMultiClassSvmTrainer, FisherIrisData) {
     std::cout << "test:  delete s" << std::endl;
     delete s;
 
-    int n = 0;
     for (LabeledObservationVector::iterator i = labeledObservationVector.begin(); i != labeledObservationVector.end(); i++) {
-        std::cout << "test: delete labeled observation vector " << n << " with label " << i->first << std::endl;
         delete i->second;
     }
 }

@@ -18,6 +18,15 @@
 MothurOut* MothurOut::_uniqueInstance = 0;
 
 
+TEST(ClassifySvmSharedCommand, readSharedAndDesignFiles) {
+    LabeledObservationVector labeledObservationVector;
+    ClassifySvmSharedCommand::readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector);
+    EXPECT_EQ(2, labeledObservationVector.size());
+    for (LabeledObservationVector::iterator i = labeledObservationVector.begin(); i != labeledObservationVector.end(); i++) {
+        delete i->second;
+    }
+}
+
 TEST(SvmTest, Construct) {
     SVM svm();
 }
@@ -55,6 +64,7 @@ TEST(SmoTrainer, AssignNumericLabels) {
     NumericClassToLabel discriminantToLabel;
     discriminantToLabel[-1] = "label_0";
     discriminantToLabel[+1] = "label_1";
+
     SmoTrainer t;
     t.assignNumericLabels(y, labelVector, discriminantToLabel);
 
@@ -156,6 +166,7 @@ TEST(SmoTrainer, Train) {
     SmoTrainer t;
     SVM* svm = t.train(observationVector);
 
+    //std::cout << "test discriminant function" << std::endl;
     EXPECT_EQ(-1, svm->discriminant(x_blue_0));
     EXPECT_EQ( 1, svm->discriminant(x_green_0));
     EXPECT_EQ(-1, svm->discriminant(x_blue_1));
@@ -176,6 +187,151 @@ TEST(SmoTrainer, ElementwiseMultiply) {
     t.elementwise_multiply(a, b, c);
     EXPECT_EQ(1.0, c[0]);
     EXPECT_EQ(1.0, c[1]);
+}
+
+TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
+    Observation x1;
+    Observation x2;
+    Observation x3;
+    Observation x4;
+
+    LabeledObservationVector X;
+    X.push_back(make_pair("blue", &x1));
+    X.push_back(make_pair("green", &x2));
+    X.push_back(make_pair("blue", &x3));
+    X.push_back(make_pair("green", &x4));
+
+    LabelVector labelSet;
+    labelSet.push_back("blue");
+    labelSet.push_back("green");
+
+    // we know the order the labeled observations
+    // will be returned in training and test data
+    // sets for each cross validation fold so we can
+    // test that
+    KFoldLabeledObservationsDivider d(2, X);
+
+    // if end() is called before start() do we want an exception?
+    EXPECT_EQ(true, d.end());
+    EXPECT_EQ(2, d.getFoldNumber());
+
+    d.start(labelSet);
+
+    EXPECT_EQ(false, d.end());
+    EXPECT_EQ(0, d.getFoldNumber());
+
+    EXPECT_EQ(2, d.getTrainingData().size());
+    EXPECT_EQ("blue", d.getTrainingData()[0].first);
+    EXPECT_EQ(&x3, d.getTrainingData()[0].second);
+    EXPECT_EQ("green", d.getTrainingData()[1].first);
+    EXPECT_EQ(&x4, d.getTrainingData()[1].second);
+
+    EXPECT_EQ(2, d.getTestingData().size());
+    EXPECT_EQ("blue", d.getTestingData()[0].first);
+    EXPECT_EQ(&x1, d.getTestingData()[0].second);
+    EXPECT_EQ("green", d.getTestingData()[1].first);
+    EXPECT_EQ(&x2, d.getTestingData()[1].second);
+
+    EXPECT_EQ(false, d.end());
+
+    d.next();
+
+    EXPECT_EQ(1, d.getFoldNumber());
+
+    EXPECT_EQ(2, d.getTrainingData().size());
+    EXPECT_EQ("blue", d.getTrainingData()[0].first);
+    EXPECT_EQ(&x1, d.getTrainingData()[0].second);
+    EXPECT_EQ("green", d.getTrainingData()[1].first);
+    EXPECT_EQ(&x2, d.getTrainingData()[1].second);
+
+    EXPECT_EQ(2, d.getTestingData().size());
+    EXPECT_EQ("blue", d.getTestingData()[0].first);
+    EXPECT_EQ(&x3, d.getTestingData()[0].second);
+    EXPECT_EQ("green", d.getTestingData()[1].first);
+    EXPECT_EQ(&x4, d.getTestingData()[1].second);
+
+    d.next();
+
+    EXPECT_EQ(true, d.end());
+}
+
+TEST(KFoldLabeledObservationsDivider, TwoFoldLoopTest) {
+    Observation x1;
+    Observation x2;
+    Observation x3;
+    Observation x4;
+
+    LabeledObservationVector X;
+    X.push_back(make_pair("blue", &x1));
+    X.push_back(make_pair("green", &x2));
+    X.push_back(make_pair("blue", &x3));
+    X.push_back(make_pair("green", &x4));
+
+    LabelVector labelSet;
+    labelSet.push_back("blue");
+    labelSet.push_back("green");
+
+    // we know the order the labeled observations
+    // will be returned in training and test data
+    // sets for each cross validation fold so we can
+    // test that
+    KFoldLabeledObservationsDivider d(2, X);
+
+    // if end() is called before start() do we want an exception?
+    EXPECT_EQ(true, d.end());
+
+    int i = 0;
+    for (d.start(labelSet); !d.end(); d.next()) {
+        EXPECT_EQ(i, d.getFoldNumber());
+        EXPECT_EQ(2, d.getTrainingData().size());
+        EXPECT_EQ(2, d.getTestingData().size());
+        i++;
+    }
+    EXPECT_EQ(2, i);
+    EXPECT_EQ(2, d.getFoldNumber());
+
+}
+
+TEST(KFoldLabeledObservationsDivider, ThreeFoldLoopTest) {
+    Observation x1;
+    Observation x2;
+    Observation x3;
+    Observation x4;
+    Observation x5;
+    Observation x6;
+
+    LabeledObservationVector X;
+    X.push_back(make_pair("blue", &x1));
+    X.push_back(make_pair("green", &x2));
+    X.push_back(make_pair("blue", &x3));
+    X.push_back(make_pair("green", &x4));
+    X.push_back(make_pair("blue", &x5));
+    X.push_back(make_pair("green", &x6));
+
+    LabelVector labelSet;
+    labelSet.push_back("blue");
+    labelSet.push_back("green");
+
+    // we know the order the labeled observations
+    // will be returned in training and test data
+    // sets for each cross validation fold so we can
+    // test that
+    KFoldLabeledObservationsDivider d(3, X);
+
+    // if end() is called before start() do we want an exception?
+    EXPECT_EQ(true, d.end());
+
+    int i = 0;
+    for (d.start(labelSet); !d.end(); d.next()) {
+        EXPECT_EQ(i, d.getFoldNumber());
+        EXPECT_EQ(4, d.getTrainingData().size());
+        EXPECT_EQ(2, d.getTestingData().size());
+        i++;
+        std::cout << "fold " << i << " fold number " << d.getFoldNumber() << std::endl;
+    }
+    EXPECT_EQ(3, i);
+    EXPECT_EQ(3, d.getFoldNumber());
+
 }
 
 TEST(OneVsOneMultiClassSvmTrainer, buildLabelSet) {
@@ -272,32 +428,11 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
     LabeledObservationVector labeledObservationVector;
     ClassifySvmSharedCommand::readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector);
     EXPECT_EQ(2, labeledObservationVector.size());
-/*
-    LabelVector labelVector;
-    labelVector.push_back("label_0");
-    labelVector.push_back("label_2");
-    labelVector.push_back("label_1");
-    labelVector.push_back("label_0");
-    labelVector.push_back("label_2");
-    labelVector.push_back("label_1");
-    LabelSet expectedLabelSet;
-    expectedLabelSet.insert(labelVector.begin(), labelVector.end());
-    //LabelSet labelSet;
-
-    FeatureVector featureVector();
-    LabeledObservationVector observations;
-    observations.push_back(std::make_pair("label_0", &featureVector));
-    observations.push_back(std::make_pair("label_2", &featureVector));
-    observations.push_back(std::make_pair("label_1", &featureVector));
-    observations.push_back(std::make_pair("label_0", &featureVector));
-    observations.push_back(std::make_pair("label_2", &featureVector));
-    observations.push_back(std::make_pair("label_1", &featureVector));
-  */
     OneVsOneMultiClassSvmTrainer t(labeledObservationVector);
 
     const LabelSet& labelSet = t.getLabelSet();
 
     EXPECT_EQ(2, labelSet.size());
-    EXPECT_EQ(1, labelSet.count("forest"));
-    EXPECT_EQ(1, labelSet.count("pasture"));
+    EXPECT_EQ(1, labelSet.count("a"));
+    EXPECT_EQ(1, labelSet.count("b"));
 }
