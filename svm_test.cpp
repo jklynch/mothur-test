@@ -189,6 +189,28 @@ TEST(SmoTrainer, ElementwiseMultiply) {
     EXPECT_EQ(1.0, c[1]);
 }
 
+TEST(ParameterSetBuilder, Construct) {
+    ParameterRangeMap m;
+    m["a"].push_back(1);
+    m["a"].push_back(2);
+    m["a"].push_back(3);
+    m["b"].push_back(1);
+    m["b"].push_back(2);
+    m["b"].push_back(3);
+    m["c"].push_back(1);
+    m["c"].push_back(2);
+    m["c"].push_back(3);
+
+    ParameterSetBuilder p(m);
+    ParameterMapVector::const_iterator i = p.getParameterSetList().begin();
+    for (; i != p.getParameterSetList().end(); i++) {
+        ParameterMap pmap = *i;
+        for ( ParameterMap::iterator j = pmap.begin(); j != pmap.end(); j++ ) {
+            std::cout << j->first << " " << j->second << std::endl;
+        }
+    }
+}
+
 TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
     Observation x1;
     Observation x2;
