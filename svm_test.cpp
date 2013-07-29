@@ -17,7 +17,7 @@
 
 MothurOut* MothurOut::_uniqueInstance = 0;
 
-
+// I'm not sure the behavior of this test is correct
 TEST(ClassifySvmSharedCommand, readSharedAndDesignFiles) {
     LabeledObservationVector labeledObservationVector;
     ClassifySvmSharedCommand::readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector);
@@ -27,8 +27,21 @@ TEST(ClassifySvmSharedCommand, readSharedAndDesignFiles) {
     }
 }
 
-TEST(SvmTest, Construct) {
-    SVM svm();
+TEST(LabelPair, BuildLabelPair) {
+    Label blueLabel = "blue";
+    Label greenLabel = "green";
+    LabelPair labelPair = buildLabelPair(blueLabel, greenLabel);
+
+    EXPECT_EQ(2, labelPair.size());
+    EXPECT_EQ("blue", labelPair[0]);
+    EXPECT_EQ("green", labelPair[1]);
+
+    LabelPair::iterator i = labelPair.begin();
+    EXPECT_EQ("blue", *i);
+    i++;
+    EXPECT_EQ("green", *i);
+    i++;
+    EXPECT_EQ(labelPair.end(), i);
 }
 
 TEST(SvmTest, ReadData) {
@@ -44,21 +57,21 @@ TEST(SvmTest, ReadData) {
     //std::vector<std::vector<double> > observations(numObservations, std::vector<double> (numFeatures, 0.0));
 }
 
-TEST(FeatureVector, Construct) {
-    FeatureVector fv(2);
-    EXPECT_EQ(2, fv.size());
-    fv[0] = 0.0;
-    fv[1] = 0.0;
-    EXPECT_EQ(2, fv.size());
+TEST(Observation, Construct) {
+    Observation observation(2);
+    EXPECT_EQ(2, observation.size());
+    observation[0] = 0.0;
+    observation[1] = 0.0;
+    EXPECT_EQ(2, observation.size());
 }
 
 TEST(SmoTrainer, AssignNumericLabels) {
-    FeatureVector fv;
+    Observation observation;
     LabeledObservationVector labelVector;
-    labelVector.push_back(std::make_pair("label_0", &fv));
-    labelVector.push_back(std::make_pair("label_2", &fv));
-    labelVector.push_back(std::make_pair("label_0", &fv));
-    labelVector.push_back(std::make_pair("label_2", &fv));
+    labelVector.push_back(std::make_pair("label_0", &observation));
+    labelVector.push_back(std::make_pair("label_2", &observation));
+    labelVector.push_back(std::make_pair("label_0", &observation));
+    labelVector.push_back(std::make_pair("label_2", &observation));
 
     std::vector<double> y(4);
     NumericClassToLabel discriminantToLabel;
@@ -78,7 +91,7 @@ TEST(SmoTrainer, AssignNumericLabels) {
 // here we are testing for an exception if SmoTrainer.assignNumericLabels()
 // gets more than two labels or fewer than two labels
 TEST(SmoTrainer, MoreThanTwoLabels) {
-    FeatureVector fv;
+    Observation fv;
     LabeledObservationVector oneLabelVector;
     oneLabelVector.push_back(std::make_pair("label_0", &fv));
     oneLabelVector.push_back(std::make_pair("label_0", &fv));
@@ -113,32 +126,32 @@ TEST(SmoTrainer, Train) {
     //
     // blue data points
     //
-    FeatureVector x_blue_0(2);
+    Observation x_blue_0(2);
     x_blue_0[0] = 1.0;
     x_blue_0[1] = 3.0;
-    FeatureVector x_blue_1(2);
+    Observation x_blue_1(2);
     x_blue_1[0] = 2.0;
     x_blue_1[1] = 5.0;
-    FeatureVector x_blue_2(2);
+    Observation x_blue_2(2);
     x_blue_2[0] = 3.0;
     x_blue_2[1] = 8.0;
-    FeatureVector x_blue_3(2);
+    Observation x_blue_3(2);
     x_blue_3[0] = 6.0;
     x_blue_3[1] = 4.0;
 
     //
     // green data points
     //
-    FeatureVector x_green_0(2);
+    Observation x_green_0(2);
     x_green_0[0] = 6.0;
     x_green_0[1] = 7.0;
-    FeatureVector x_green_1(2);
+    Observation x_green_1(2);
     x_green_1[0] = 7.0;
     x_green_1[1] = 8.0;
-    FeatureVector x_green_2(2);
+    Observation x_green_2(2);
     x_green_2[0] = 8.0;
     x_green_2[1] = 4.0;
-    FeatureVector x_green_3(2);
+    Observation x_green_3(2);
     x_green_3[0] = 3.0;
     x_green_3[1] = 6.0;
     LabeledObservationVector observationVector;
@@ -156,17 +169,17 @@ TEST(SmoTrainer, Train) {
     OneVsOneMultiClassSvmTrainer::standardizeObservations(observationVector);
     for ( ObservationVector::size_type i = 0; i < observationVector.size(); i++ ) {
         std::cout << "i = " << i;
-        for ( FeatureVector::size_type j = 0; j < observationVector[0].second->size(); j++ ) {
+        for ( Observation::size_type j = 0; j < observationVector[0].second->size(); j++ ) {
             std::cout << " " << observationVector[i].second->at(j);
         }
         std::cout << std::endl;
     }
 
 
+    LinearKernelFunction linearKernelFunction;
     SmoTrainer t;
-    SVM* svm = t.train(observationVector);
+    SVM* svm = t.train(&linearKernelFunction, observationVector);
 
-    //std::cout << "test discriminant function" << std::endl;
     EXPECT_EQ(-1, svm->discriminant(x_blue_0));
     EXPECT_EQ( 1, svm->discriminant(x_green_0));
     EXPECT_EQ(-1, svm->discriminant(x_blue_1));
@@ -223,9 +236,9 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
     X.push_back(make_pair("blue", &x3));
     X.push_back(make_pair("green", &x4));
 
-    LabelVector labelSet;
-    labelSet.push_back("blue");
-    labelSet.push_back("green");
+    //LabelVector labelSet;
+    //labelSet.push_back("blue");
+    //labelSet.push_back("green");
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -237,7 +250,7 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
     EXPECT_EQ(true, d.end());
     EXPECT_EQ(2, d.getFoldNumber());
 
-    d.start(labelSet);
+    d.start();
 
     EXPECT_EQ(false, d.end());
     EXPECT_EQ(0, d.getFoldNumber());
@@ -289,9 +302,9 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldLoopTest) {
     X.push_back(make_pair("blue", &x3));
     X.push_back(make_pair("green", &x4));
 
-    LabelVector labelSet;
-    labelSet.push_back("blue");
-    labelSet.push_back("green");
+    //LabelVector labelSet;
+    //labelSet.push_back("blue");
+    //labelSet.push_back("green");
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -303,7 +316,7 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldLoopTest) {
     EXPECT_EQ(true, d.end());
 
     int i = 0;
-    for (d.start(labelSet); !d.end(); d.next()) {
+    for (d.start(); !d.end(); d.next()) {
         EXPECT_EQ(i, d.getFoldNumber());
         EXPECT_EQ(2, d.getTrainingData().size());
         EXPECT_EQ(2, d.getTestingData().size());
@@ -330,9 +343,9 @@ TEST(KFoldLabeledObservationsDivider, ThreeFoldLoopTest) {
     X.push_back(make_pair("blue", &x5));
     X.push_back(make_pair("green", &x6));
 
-    LabelVector labelSet;
-    labelSet.push_back("blue");
-    labelSet.push_back("green");
+    //LabelVector labelSet;
+    //labelSet.push_back("blue");
+    //labelSet.push_back("green");
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -344,7 +357,7 @@ TEST(KFoldLabeledObservationsDivider, ThreeFoldLoopTest) {
     EXPECT_EQ(true, d.end());
 
     int i = 0;
-    for (d.start(labelSet); !d.end(); d.next()) {
+    for (d.start(); !d.end(); d.next()) {
         EXPECT_EQ(i, d.getFoldNumber());
         EXPECT_EQ(4, d.getTrainingData().size());
         EXPECT_EQ(2, d.getTestingData().size());
@@ -368,7 +381,7 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelSet) {
 
     LabelSet labelSet;
 
-    OneVsOneMultiClassSvmTrainer::buildLabelSet(labelSet, X);
+    buildLabelSet(labelSet, X);
 
     EXPECT_EQ(2, labelSet.size());
     EXPECT_EQ(1, labelSet.count("blue"));
@@ -390,7 +403,7 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelToLabeledObservationVector) {
     X.push_back(make_pair("red", &x4));
 
     LabelToLabeledObservationVector labelToLabeledObservationVector;
-    OneVsOneMultiClassSvmTrainer::buildLabelToLabeledObservationVector(labelToLabeledObservationVector, X);
+    buildLabelToLabeledObservationVector(labelToLabeledObservationVector, X);
 
     EXPECT_EQ(2, labelToLabeledObservationVector["blue"].size());
     EXPECT_EQ("blue", labelToLabeledObservationVector["blue"][0].first);
@@ -424,7 +437,7 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelPairSet) {
     OneVsOneMultiClassSvmTrainer::buildLabelPairSet(onePairLabelPairSet, X);
 
     EXPECT_EQ(1, onePairLabelPairSet.size());
-    EXPECT_EQ(1, onePairLabelPairSet.count(make_label_pair("blue","green")));
+    EXPECT_EQ(1, onePairLabelPairSet.count(buildLabelPair("blue","green")));
 
     X.push_back(make_pair("red", &x4));
 
@@ -433,9 +446,9 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelPairSet) {
     OneVsOneMultiClassSvmTrainer::buildLabelPairSet(threePairsLabelPairSet, X);
 
     EXPECT_EQ(3, threePairsLabelPairSet.size());
-    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("blue","green")));
-    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("blue","red")));
-    EXPECT_EQ(1, threePairsLabelPairSet.count(make_label_pair("green","red")));
+    EXPECT_EQ(1, threePairsLabelPairSet.count(buildLabelPair("blue","green")));
+    EXPECT_EQ(1, threePairsLabelPairSet.count(buildLabelPair("blue","red")));
+    EXPECT_EQ(1, threePairsLabelPairSet.count(buildLabelPair("green","red")));
 }
 
 TEST(OneVsOneMultiClassSvmTrainer, appendTrainingAndTestingData) {

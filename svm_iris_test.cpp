@@ -24,9 +24,12 @@ TEST(OneVsOneMultiClassSvmTrainer, FisherIrisData) {
     ClassifySvmSharedCommand::readSharedAndDesignFiles("iris.shared", "iris.design", labeledObservationVector);
 
     EXPECT_EQ(150, labeledObservationVector.size());
-    EXPECT_EQ("setosa", labeledObservationVector[0].first);   // setosa
-    EXPECT_EQ("versicolor", labeledObservationVector[50].first);  // versicolor
-    EXPECT_EQ("virginica", labeledObservationVector[100].first); // virginica
+    EXPECT_EQ("setosa", labeledObservationVector[0].first);
+    EXPECT_EQ("versicolor", labeledObservationVector[50].first);
+    EXPECT_EQ("virginica", labeledObservationVector[100].first);
+
+    KernelParameterRangeMap kernelParameterRangeMap;
+    getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
 
     OneVsOneMultiClassSvmTrainer t(labeledObservationVector);
     EXPECT_EQ(50, t.getLabeledObservationVectorForLabel("setosa").size());
@@ -36,7 +39,7 @@ TEST(OneVsOneMultiClassSvmTrainer, FisherIrisData) {
     EXPECT_EQ(3, t.getLabelPairSet().size());
 
     std::cout << "test:  train" << std::endl;
-    MultiClassSVM* s = t.train();
+    MultiClassSVM* s = t.train(kernelParameterRangeMap);
     std::cout << "test:  delete s" << std::endl;
     delete s;
 
