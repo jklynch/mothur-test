@@ -111,61 +111,69 @@ TEST(SmoTrainer, MoreThanTwoLabels) {
     EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector, discriminantToLabel), std::exception);
 }
 
-// test SmoTrainer on eight data points
-TEST(SmoTrainer, Train) {
-    LabelVector labelVector;
-    labelVector.push_back("blue");
-    labelVector.push_back("blue");
-    labelVector.push_back("blue");
-    labelVector.push_back("blue");
-    labelVector.push_back("green");
-    labelVector.push_back("green");
-    labelVector.push_back("green");
-    labelVector.push_back("green");
 
-    //
-    // blue data points
-    //
-    Observation x_blue_0(2);
-    x_blue_0[0] = 1.0;
-    x_blue_0[1] = 3.0;
-    Observation x_blue_1(2);
-    x_blue_1[0] = 2.0;
-    x_blue_1[1] = 5.0;
-    Observation x_blue_2(2);
-    x_blue_2[0] = 3.0;
-    x_blue_2[1] = 8.0;
-    Observation x_blue_3(2);
-    x_blue_3[0] = 6.0;
-    x_blue_3[1] = 4.0;
-
-    //
-    // green data points
-    //
-    Observation x_green_0(2);
-    x_green_0[0] = 6.0;
-    x_green_0[1] = 7.0;
-    Observation x_green_1(2);
-    x_green_1[0] = 7.0;
-    x_green_1[1] = 8.0;
-    Observation x_green_2(2);
-    x_green_2[0] = 8.0;
-    x_green_2[1] = 4.0;
-    Observation x_green_3(2);
-    x_green_3[0] = 3.0;
-    x_green_3[1] = 6.0;
+// this class is a testing fixture
+// with 8 data points in two classes
+class EightPointDataset : public testing::Test {
+public:
     LabeledObservationVector observationVector;
-    observationVector.push_back(std::make_pair("blue", &x_blue_0));
-    observationVector.push_back(std::make_pair("blue", &x_blue_1));
-    observationVector.push_back(std::make_pair("blue", &x_blue_2));
-    observationVector.push_back(std::make_pair("blue", &x_blue_3));
-    observationVector.push_back(std::make_pair("green", &x_green_0));
-    observationVector.push_back(std::make_pair("green", &x_green_1));
-    observationVector.push_back(std::make_pair("green", &x_green_2));
-    observationVector.push_back(std::make_pair("green", &x_green_3));
-    std::cout << "observation count: " << observationVector.size() << std::endl;
-    std::cout << "feature count: " << observationVector[0].second->size() << std::endl;
+    Observation x_blue_0;
+    Observation x_blue_1;
+    Observation x_blue_2;
+    Observation x_blue_3;
+    Observation x_green_0;
+    Observation x_green_1;
+    Observation x_green_2;
+    Observation x_green_3;
 
+    virtual void SetUp() {
+        //
+        // blue data points
+        //
+        x_blue_0.push_back(1.0);
+        x_blue_0.push_back(3.0);
+
+        x_blue_1.push_back(2.0);
+        x_blue_1.push_back(5.0);
+
+        x_blue_2.push_back(3.0);
+        x_blue_2.push_back(8.0);
+
+        x_blue_3.push_back(6.0);
+        x_blue_3.push_back(4.0);
+
+        //
+        // green data points
+        //
+        x_green_0.push_back(6.0);
+        x_green_0.push_back(7.0);
+
+        x_green_1.push_back(7.0);
+        x_green_1.push_back(8.0);
+
+        x_green_2.push_back(8.0);
+        x_green_2.push_back(4.0);
+
+        x_green_3.push_back(3.0);
+        x_green_3.push_back(6.0);
+
+        observationVector.push_back(std::make_pair("blue", &x_blue_0));
+        observationVector.push_back(std::make_pair("blue", &x_blue_1));
+        observationVector.push_back(std::make_pair("blue", &x_blue_2));
+        observationVector.push_back(std::make_pair("blue", &x_blue_3));
+        observationVector.push_back(std::make_pair("green", &x_green_0));
+        observationVector.push_back(std::make_pair("green", &x_green_1));
+        observationVector.push_back(std::make_pair("green", &x_green_2));
+        observationVector.push_back(std::make_pair("green", &x_green_3));
+    }
+
+    virtual void TearDown() {
+
+    }
+};
+
+// test SmoTrainer on eight data points
+TEST_F(EightPointDataset, SmoTrainerTrain) {
     OneVsOneMultiClassSvmTrainer::standardizeObservations(observationVector);
     for ( ObservationVector::size_type i = 0; i < observationVector.size(); i++ ) {
         std::cout << "i = " << i;
@@ -224,6 +232,7 @@ TEST(ParameterSetBuilder, Construct) {
     }
 }
 
+// use the eight point dataset fixture
 TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
     Observation x1;
     Observation x2;
@@ -470,4 +479,14 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
     EXPECT_EQ(2, labelSet.size());
     EXPECT_EQ(1, labelSet.count("a"));
     EXPECT_EQ(1, labelSet.count("b"));
+}
+
+
+TEST_F(EightPointDataset, SvmRfe) {
+    KernelParameterRangeMap kernelParameterRangeMap;
+    getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
+
+    //SvmRfe svmRfe;
+
+    //FeatureVector orderedFeatureList = svmRfe.getOrderedFeatureList(observationList, kernelParameterRangeMap);
 }
