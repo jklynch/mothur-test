@@ -68,10 +68,14 @@ TEST(Observation, Construct) {
 TEST(SmoTrainer, AssignNumericLabels) {
     Observation observation;
     LabeledObservationVector labelVector;
-    labelVector.push_back(std::make_pair("label_0", &observation));
-    labelVector.push_back(std::make_pair("label_2", &observation));
-    labelVector.push_back(std::make_pair("label_0", &observation));
-    labelVector.push_back(std::make_pair("label_2", &observation));
+    //labelVector.push_back(std::make_pair("label_0", &observation));
+    //labelVector.push_back(std::make_pair("label_2", &observation));
+    //labelVector.push_back(std::make_pair("label_0", &observation));
+    //labelVector.push_back(std::make_pair("label_2", &observation));
+    labelVector.push_back(LabeledObservation(0, "label_0", &observation));
+    labelVector.push_back(LabeledObservation(1, "label_2", &observation));
+    labelVector.push_back(LabeledObservation(2, "label_0", &observation));
+    labelVector.push_back(LabeledObservation(3, "label_2", &observation));
 
     std::vector<double> y(4);
     NumericClassToLabel discriminantToLabel;
@@ -93,14 +97,20 @@ TEST(SmoTrainer, AssignNumericLabels) {
 TEST(SmoTrainer, MoreThanTwoLabels) {
     Observation fv;
     LabeledObservationVector oneLabelVector;
-    oneLabelVector.push_back(std::make_pair("label_0", &fv));
-    oneLabelVector.push_back(std::make_pair("label_0", &fv));
-    oneLabelVector.push_back(std::make_pair("label_0", &fv));
+    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
+    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
+    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
+    oneLabelVector.push_back(LabeledObservation(0, "label_0", &fv));
+    oneLabelVector.push_back(LabeledObservation(1, "label_0", &fv));
+    oneLabelVector.push_back(LabeledObservation(2, "label_0", &fv));
 
     LabeledObservationVector threeLabelsVector;
-    threeLabelsVector.push_back(std::make_pair("label_0", &fv));
-    threeLabelsVector.push_back(std::make_pair("label_1", &fv));
-    threeLabelsVector.push_back(std::make_pair("label_2", &fv));
+    //threeLabelsVector.push_back(std::make_pair("label_0", &fv));
+    //threeLabelsVector.push_back(std::make_pair("label_1", &fv));
+    //threeLabelsVector.push_back(std::make_pair("label_2", &fv));
+    threeLabelsVector.push_back(LabeledObservation(0, "label_0", &fv));
+    threeLabelsVector.push_back(LabeledObservation(1, "label_1", &fv));
+    threeLabelsVector.push_back(LabeledObservation(2, "label_2", &fv));
 
     std::vector<double> y(3);
     NumericClassToLabel discriminantToLabel;
@@ -157,14 +167,14 @@ public:
         x_green_3.push_back(3.0);
         x_green_3.push_back(6.0);
 
-        observationVector.push_back(std::make_pair("blue", &x_blue_0));
-        observationVector.push_back(std::make_pair("blue", &x_blue_1));
-        observationVector.push_back(std::make_pair("blue", &x_blue_2));
-        observationVector.push_back(std::make_pair("blue", &x_blue_3));
-        observationVector.push_back(std::make_pair("green", &x_green_0));
-        observationVector.push_back(std::make_pair("green", &x_green_1));
-        observationVector.push_back(std::make_pair("green", &x_green_2));
-        observationVector.push_back(std::make_pair("green", &x_green_3));
+        observationVector.push_back(LabeledObservation(0, "blue", &x_blue_0));
+        observationVector.push_back(LabeledObservation(1, "blue", &x_blue_1));
+        observationVector.push_back(LabeledObservation(2, "blue", &x_blue_2));
+        observationVector.push_back(LabeledObservation(3, "blue", &x_blue_3));
+        observationVector.push_back(LabeledObservation(4, "green", &x_green_0));
+        observationVector.push_back(LabeledObservation(5, "green", &x_green_1));
+        observationVector.push_back(LabeledObservation(6, "green", &x_green_2));
+        observationVector.push_back(LabeledObservation(7, "green", &x_green_3));
     }
 
     virtual void TearDown() {
@@ -240,14 +250,14 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldTest) {
     Observation x4;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
-    X.push_back(make_pair("green", &x4));
-
-    //LabelVector labelSet;
-    //labelSet.push_back("blue");
-    //labelSet.push_back("green");
+    //X.push_back(make_pair("blue", &x1));
+    //X.push_back(make_pair("green", &x2));
+    //X.push_back(make_pair("blue", &x3));
+    //X.push_back(make_pair("green", &x4));
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
+    X.push_back(LabeledObservation(3, "green", &x4));
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -306,14 +316,10 @@ TEST(KFoldLabeledObservationsDivider, TwoFoldLoopTest) {
     Observation x4;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
-    X.push_back(make_pair("green", &x4));
-
-    //LabelVector labelSet;
-    //labelSet.push_back("blue");
-    //labelSet.push_back("green");
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
+    X.push_back(LabeledObservation(3, "green", &x4));
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -345,16 +351,18 @@ TEST(KFoldLabeledObservationsDivider, ThreeFoldLoopTest) {
     Observation x6;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
-    X.push_back(make_pair("green", &x4));
-    X.push_back(make_pair("blue", &x5));
-    X.push_back(make_pair("green", &x6));
-
-    //LabelVector labelSet;
-    //labelSet.push_back("blue");
-    //labelSet.push_back("green");
+    //X.push_back(make_pair("blue", &x1));
+    //X.push_back(make_pair("green", &x2));
+    //X.push_back(make_pair("blue", &x3));
+    //X.push_back(make_pair("green", &x4));
+    //X.push_back(make_pair("blue", &x5));
+    //X.push_back(make_pair("green", &x6));
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
+    X.push_back(LabeledObservation(3, "green", &x4));
+    X.push_back(LabeledObservation(4, "blue", &x5));
+    X.push_back(LabeledObservation(5, "green", &x6));
 
     // we know the order the labeled observations
     // will be returned in training and test data
@@ -384,9 +392,9 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelSet) {
     Observation x3;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
 
     LabelSet labelSet;
 
@@ -406,10 +414,10 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelToLabeledObservationVector) {
     Observation x4;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
-    X.push_back(make_pair("red", &x4));
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
+    X.push_back(LabeledObservation(3, "red", &x4));
 
     LabelToLabeledObservationVector labelToLabeledObservationVector;
     buildLabelToLabeledObservationVector(labelToLabeledObservationVector, X);
@@ -437,9 +445,9 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelPairSet) {
     Observation x4;
 
     LabeledObservationVector X;
-    X.push_back(make_pair("blue", &x1));
-    X.push_back(make_pair("green", &x2));
-    X.push_back(make_pair("blue", &x3));
+    X.push_back(LabeledObservation(0, "blue", &x1));
+    X.push_back(LabeledObservation(1, "green", &x2));
+    X.push_back(LabeledObservation(2, "blue", &x3));
 
     LabelPairSet onePairLabelPairSet;
 
@@ -448,7 +456,7 @@ TEST(OneVsOneMultiClassSvmTrainer, buildLabelPairSet) {
     EXPECT_EQ(1, onePairLabelPairSet.size());
     EXPECT_EQ(1, onePairLabelPairSet.count(buildLabelPair("blue","green")));
 
-    X.push_back(make_pair("red", &x4));
+    X.push_back(LabeledObservation(3, "red", &x4));
 
     LabelPairSet threePairsLabelPairSet;
 
@@ -486,7 +494,7 @@ TEST_F(EightPointDataset, SvmRfe) {
     KernelParameterRangeMap kernelParameterRangeMap;
     getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
 
-    //SvmRfe svmRfe;
+    SvmRfe svmRfe;
 
-    //FeatureVector orderedFeatureList = svmRfe.getOrderedFeatureList(observationList, kernelParameterRangeMap);
+    //FeatureLabelVector orderedFeatureList = svmRfe.getOrderedFeatureList(observationList, kernelParameterRangeMap);
 }
