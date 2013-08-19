@@ -19,16 +19,26 @@ MothurOut* MothurOut::_uniqueInstance = 0;
 
 
 TEST(OneVsOneMultiClassSvmTrainer, WtMiceData) {
-    LabeledObservationVector labeledObservationVector;
+    MothurOut* m = MothurOut::getInstance();
+    ClassifySvmSharedCommand classifySvmSharedCommand;
 
+    LabeledObservationVector labeledObservationVector;
+    FeatureVector featureVector;
+
+    SvmDataset svmDataset(labeledObservationVector, featureVector);
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    std::cout << "testing wtmiceonly data" << std::endl;
     std::string sharedFilePath = "~/gsoc2013/data/WTmiceonly_final.shared";
     std::string designFilePath = "~/gsoc2013/data/WTmiceonly_final.design";
 
-    ClassifySvmSharedCommand::readSharedAndDesignFiles(sharedFilePath, designFilePath, labeledObservationVector);
+    classifySvmSharedCommand.readSharedAndDesignFiles(sharedFilePath, designFilePath, labeledObservationVector, featureVector);
 
     EXPECT_EQ(113, labeledObservationVector.size());
 
-    OneVsOneMultiClassSvmTrainer t(labeledObservationVector);
+    int evaluationFoldCount = 3;
+    int trainFoldCount = 5;
+    OneVsOneMultiClassSvmTrainer t(svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
     EXPECT_EQ(4, t.getLabelSet().size());
     EXPECT_EQ(6, t.getLabelPairSet().size());
 

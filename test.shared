@@ -1,3 +1,3 @@
-label	Group	numOtus	Otu01	Otu02	Otu03	Otu04	Otu05
+label	Group	numOtus	OTU_01	OTU_02	OTU_03	OTU_04	OTU_05
 0.10	forest	5		0		5		2		3		1
 0.10	pasture	5		7		2		5		1		3

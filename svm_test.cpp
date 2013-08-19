@@ -17,16 +17,46 @@
 
 MothurOut* MothurOut::_uniqueInstance = 0;
 
+
+// can we instantiate ClassifySvmSharedCommand?
+TEST(ClassifySvmSharedCommand, Instantiate) {
+    ClassifySvmSharedCommand c;
+}
+
+// can we read a shared file in a test?
+// this is a test of my understanding rather than of code
+TEST(ClassifySvmSharedCommand, ReadSharedFile) {
+    MothurOut* m = MothurOut::getInstance();
+    InputData input("test.shared", "sharedfile");
+    vector<SharedRAbundVector*> lookup = input.getSharedRAbundVectors();
+
+    int numObservations = lookup.size();
+    EXPECT_EQ(2, numObservations);
+    int numFeatures = lookup[0]->getNumBins();
+    EXPECT_EQ(5, numFeatures);
+    EXPECT_EQ("OTU_01", m->currentBinLabels[0]);
+    EXPECT_EQ("OTU_02", m->currentBinLabels[1]);
+}
+
 // I'm not sure the behavior of this test is correct
-TEST(ClassifySvmSharedCommand, readSharedAndDesignFiles) {
+TEST(ClassifySvmSharedCommand, ReadSharedAndDesignFiles) {
+    MothurOut* m = MothurOut::getInstance();
+    ClassifySvmSharedCommand classifySvmSharedCommand;
+
     LabeledObservationVector labeledObservationVector;
-    ClassifySvmSharedCommand::readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector);
+    FeatureVector featureVector;
+
+    classifySvmSharedCommand.readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector, featureVector);
+
     EXPECT_EQ(2, labeledObservationVector.size());
+    EXPECT_EQ(0, featureVector[0].getFeatureIndex());
+    EXPECT_EQ(m->currentBinLabels[0], featureVector[0].getFeatureLabel());
     for (LabeledObservationVector::iterator i = labeledObservationVector.begin(); i != labeledObservationVector.end(); i++) {
         delete i->second;
     }
 }
 
+// test the behavior of the LabelPair typedef
 TEST(LabelPair, BuildLabelPair) {
     Label blueLabel = "blue";
     Label greenLabel = "green";
@@ -44,19 +74,6 @@ TEST(LabelPair, BuildLabelPair) {
     EXPECT_EQ(labelPair.end(), i);
 }
 
-TEST(SvmTest, ReadData) {
-    InputData input("test.shared", "sharedfile");
-    vector<SharedRAbundVector*> lookup = input.getSharedRAbundVectors();
-    int numObservations = lookup.size();
-    EXPECT_EQ(2, numObservations);
-    int numFeatures = lookup[0]->getNumBins();
-    EXPECT_EQ(5, numFeatures);
-
-    // convert OTU frequency counts to double
-    // in general we will also want to normalize the counts
-    //std::vector<std::vector<double> > observations(numObservations, std::vector<double> (numFeatures, 0.0));
-}
-
 TEST(Observation, Construct) {
     Observation observation(2);
     EXPECT_EQ(2, observation.size());
@@ -65,22 +82,19 @@ TEST(Observation, Construct) {
     EXPECT_EQ(2, observation.size());
 }
 
+// this test puts together a trivial set of labeled observations
+// in order to test assignment of numeric classes (+1.0 and -1.0)
 TEST(SmoTrainer, AssignNumericLabels) {
     Observation observation;
     LabeledObservationVector labelVector;
-    //labelVector.push_back(std::make_pair("label_0", &observation));
-    //labelVector.push_back(std::make_pair("label_2", &observation));
-    //labelVector.push_back(std::make_pair("label_0", &observation));
-    //labelVector.push_back(std::make_pair("label_2", &observation));
+
     labelVector.push_back(LabeledObservation(0, "label_0", &observation));
     labelVector.push_back(LabeledObservation(1, "label_2", &observation));
     labelVector.push_back(LabeledObservation(2, "label_0", &observation));
     labelVector.push_back(LabeledObservation(3, "label_2", &observation));
 
-    std::vector<double> y(4);
+    std::vector<double> y;
     NumericClassToLabel discriminantToLabel;
-    discriminantToLabel[-1] = "label_0";
-    discriminantToLabel[+1] = "label_1";
 
     SmoTrainer t;
     t.assignNumericLabels(y, labelVector, discriminantToLabel);
@@ -90,6 +104,8 @@ TEST(SmoTrainer, AssignNumericLabels) {
     EXPECT_EQ(+1.0, y[1]);
     EXPECT_EQ(-1.0, y[2]);
     EXPECT_EQ(+1.0, y[3]);
+    EXPECT_EQ("label_0", discriminantToLabel[-1.0]);
+    EXPECT_EQ("label_2", discriminantToLabel[+1.0]);
 }
 
 // here we are testing for an exception if SmoTrainer.assignNumericLabels()
@@ -97,35 +113,54 @@ TEST(SmoTrainer, AssignNumericLabels) {
 TEST(SmoTrainer, MoreThanTwoLabels) {
     Observation fv;
     LabeledObservationVector oneLabelVector;
-    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
-    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
-    //oneLabelVector.push_back(std::make_pair("label_0", &fv));
+
     oneLabelVector.push_back(LabeledObservation(0, "label_0", &fv));
     oneLabelVector.push_back(LabeledObservation(1, "label_0", &fv));
     oneLabelVector.push_back(LabeledObservation(2, "label_0", &fv));
 
     LabeledObservationVector threeLabelsVector;
-    //threeLabelsVector.push_back(std::make_pair("label_0", &fv));
-    //threeLabelsVector.push_back(std::make_pair("label_1", &fv));
-    //threeLabelsVector.push_back(std::make_pair("label_2", &fv));
+
     threeLabelsVector.push_back(LabeledObservation(0, "label_0", &fv));
     threeLabelsVector.push_back(LabeledObservation(1, "label_1", &fv));
     threeLabelsVector.push_back(LabeledObservation(2, "label_2", &fv));
 
-    std::vector<double> y(3);
+    std::vector<double> y;
     NumericClassToLabel discriminantToLabel;
-    discriminantToLabel[-1] = "label_0";
-    discriminantToLabel[+1] = "label_1";
     SmoTrainer t;
-    EXPECT_THROW(t.assignNumericLabels(y, oneLabelVector, discriminantToLabel), std::exception);
-    EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector, discriminantToLabel), std::exception);
+    EXPECT_THROW(t.assignNumericLabels(y, oneLabelVector, discriminantToLabel), SmoTrainerException);
+    EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector, discriminantToLabel), SmoTrainerException);
 }
 
 
 // this class is a testing fixture
-// with 8 data points in two classes
+// with 8 data points in two classes, 'blue' and 'green'
+// this data is not perfectly separable, as can be seen below:
+//
+//  8           B2          g1
+//
+//  7                    g0
+//
+//  6           g3
+//
+//  5        B1
+//
+//  4                    B3    g2
+//
+//  3     B0
+//
+//  2
+//
+//  1
+//
+//  0
+//     0  1  2  3  4  5  6  7  8  9
+//
+//  We should expect data points B3 and g3 to be misclassified
+//  even in the best case.
+//
 class EightPointDataset : public testing::Test {
 public:
+    SvmDataset* svmDataset;
     LabeledObservationVector observationVector;
     Observation x_blue_0;
     Observation x_blue_1;
@@ -175,10 +210,19 @@ public:
         observationVector.push_back(LabeledObservation(5, "green", &x_green_1));
         observationVector.push_back(LabeledObservation(6, "green", &x_green_2));
         observationVector.push_back(LabeledObservation(7, "green", &x_green_3));
+
+        // there are two features
+        Feature featureA(0, "feature A");
+        Feature featureB(1, "feature B");
+        FeatureVector featureVector;
+        featureVector.push_back(featureA);
+        featureVector.push_back(featureB);
+
+        svmDataset = new SvmDataset(observationVector, featureVector);
     }
 
     virtual void TearDown() {
-
+        delete svmDataset;
     }
 };
 
@@ -192,7 +236,6 @@ TEST_F(EightPointDataset, SmoTrainerTrain) {
         }
         std::cout << std::endl;
     }
-
 
     LinearKernelFunction linearKernelFunction;
     SmoTrainer t;
@@ -220,6 +263,7 @@ TEST(SmoTrainer, ElementwiseMultiply) {
     EXPECT_EQ(1.0, c[1]);
 }
 
+
 TEST(ParameterSetBuilder, Construct) {
     ParameterRangeMap m;
     m["a"].push_back(1);
@@ -232,14 +276,19 @@ TEST(ParameterSetBuilder, Construct) {
     m["c"].push_back(2);
     m["c"].push_back(3);
 
+    int parameterSetCount = 0;
+
     ParameterSetBuilder p(m);
     ParameterMapVector::const_iterator i = p.getParameterSetList().begin();
     for (; i != p.getParameterSetList().end(); i++) {
         ParameterMap pmap = *i;
         for ( ParameterMap::iterator j = pmap.begin(); j != pmap.end(); j++ ) {
-            std::cout << j->first << " " << j->second << std::endl;
+            //std::cout << j->first << " " << j->second << std::endl;
         }
+        parameterSetCount++;
     }
+
+    EXPECT_EQ(27, parameterSetCount);
 }
 
 // use the eight point dataset fixture
@@ -477,10 +526,21 @@ TEST(OneVsOneMultiClassSvmTrainer, standardizeObservations) {
 }
 
 TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
+    MothurOut* m = MothurOut::getInstance();
+    ClassifySvmSharedCommand classifySvmSharedCommand;
+
     LabeledObservationVector labeledObservationVector;
-    ClassifySvmSharedCommand::readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector);
+    FeatureVector featureVector;
+
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    classifySvmSharedCommand.readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector, featureVector);
+    SvmDataset svmDataset(labeledObservationVector, featureVector);
     EXPECT_EQ(2, labeledObservationVector.size());
-    OneVsOneMultiClassSvmTrainer t(labeledObservationVector);
+
+    int evaluationFoldCount = 3;
+    int trainFoldCount = 5;
+    OneVsOneMultiClassSvmTrainer t(svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
 
     const LabelSet& labelSet = t.getLabelSet();
 
@@ -489,12 +549,30 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
     EXPECT_EQ(1, labelSet.count("b"));
 }
 
+class TestExternalSvmTrainingInterruption : public ExternalSvmTrainingInterruption {
+public:
+    bool interruptTraining() { return true; }
+};
 
-TEST_F(EightPointDataset, SvmRfe) {
+TEST(OneVsOneMultiClassSvmTrainer, ExternalSvmTrainingInterruption) {
+    MothurOut* m = MothurOut::getInstance();
+    ClassifySvmSharedCommand classifySvmSharedCommand;
+
+    LabeledObservationVector labeledObservationVector;
+    FeatureVector featureVector;
+
+    classifySvmSharedCommand.readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector, featureVector);
+    SvmDataset svmDataset(labeledObservationVector, featureVector);
+    EXPECT_EQ(2, labeledObservationVector.size());
+
+    int evaluationFoldCount = 3;
+    int trainFoldCount = 5;
+    TestExternalSvmTrainingInterruption externalInterruption;
+
+    OneVsOneMultiClassSvmTrainer t(svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+
     KernelParameterRangeMap kernelParameterRangeMap;
     getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
 
-    SvmRfe svmRfe;
-
-    //FeatureLabelVector orderedFeatureList = svmRfe.getOrderedFeatureList(observationList, kernelParameterRangeMap);
+    EXPECT_THROW(t.train(kernelParameterRangeMap), std::exception);
 }
