@@ -30,7 +30,8 @@ USER_DIR = .
 CPPFLAGS += -I$(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra
+# -g and -O1 for valgrind, -g for perf
+CXXFLAGS += -g -O1 -Wall -Wextra
 
 CXXFLAGS += -DUSE_READLINE
 LIBS = \

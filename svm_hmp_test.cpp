@@ -44,8 +44,8 @@ public:
 
         svmDataset = new SvmDataset(labeledObservationVector, featureVector);
 
-        int evaluationFoldCount = 3;
-        int trainFoldCount = 5;
+        int evaluationFoldCount = 5;
+        int trainFoldCount = 10;
         trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
     }
 
@@ -54,6 +54,7 @@ public:
         delete svmDataset;
     }
 };
+
 TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainer) {
     EXPECT_EQ(596, labeledObservationVector.size());
 
@@ -69,10 +70,12 @@ TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainer) {
     delete s;
 }
 
-
+// using the more constants does make a difference in results
 TEST_F(HmpDataFixture, SvmRfe) {
     SvmRfe svmRfe;
-    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, LinearKernelFunction::defaultConstantRange, SmoTrainer::defaultCRange);
+    double constantRange[] = {0.0};
+    ParameterRange linearConstantRange(constantRange, constantRange + 1);
+    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, SmoTrainer::defaultCRange);
 
     int n = 0;
     std::cout << "ordered features:" << std::endl;

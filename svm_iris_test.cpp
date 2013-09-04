@@ -20,7 +20,7 @@ MothurOut* MothurOut::_uniqueInstance = 0;
 
 class FisherIrisDataFixture : public testing::Test {
 public:
-    MothurOut* m = MothurOut::getInstance();
+    MothurOut* m;// = MothurOut::getInstance();
 
     LabeledObservationVector labeledObservationVector;
     FeatureVector featureVector;
@@ -32,6 +32,8 @@ public:
     OneVsOneMultiClassSvmTrainer* trainer;
 
     virtual void SetUp() {
+        m = MothurOut::getInstance();
+
         ClassifySvmSharedCommand classifySvmSharedCommand;
 
         labeledObservationVector.clear();

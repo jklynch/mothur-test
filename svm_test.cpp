@@ -5,6 +5,11 @@
 //  Copyright (c) 2013 Schloss Lab. All rights reserved.
 //
 
+//
+//  Run tests by name using command line option:
+//      ./svm_test --gtest_filter=EightPointDataset.SmoTrainerTrain
+//
+
 #include "gtest/gtest.h"
 
 #include "mothur/mothurout.h"
@@ -226,6 +231,40 @@ public:
     }
 };
 
+TEST_F(EightPointDataset, KernelFunctionCache) {
+    KernelFunctionFactory kernelFunctionFactory(observationVector);
+    KernelFunction& linearKernelFunction = kernelFunctionFactory.getKernelFunctionForKey(
+        LinearKernelFunction::MapKey
+    );
+
+    ParameterMap m;
+    m.insert(std::make_pair(LinearKernelFunction::MapKey_Constant, 1.0));
+    linearKernelFunction.setParameters(m);
+
+    KernelFunctionCache linearKernelFunctionCache(linearKernelFunction, observationVector);
+
+    EXPECT_EQ(true, linearKernelFunction.rowNotCached(0));
+    EXPECT_EQ(true, linearKernelFunctionCache.rowNotCached(0));
+
+    EXPECT_EQ(true, linearKernelFunction.rowNotCached(1));
+    EXPECT_EQ(true, linearKernelFunctionCache.rowNotCached(1));
+
+    EXPECT_EQ(10.0, linearKernelFunction.calculateParameterFreeSimilarity(observationVector[0], observationVector[0]));
+    EXPECT_EQ(11.0, linearKernelFunction.similarity(observationVector[0], observationVector[0]));
+    EXPECT_EQ(11.0, linearKernelFunctionCache.similarity(observationVector[0], observationVector[0]));
+
+    EXPECT_EQ(17.0, linearKernelFunction.calculateParameterFreeSimilarity(observationVector[0], observationVector[1]));
+    EXPECT_EQ(18.0, linearKernelFunction.similarity(observationVector[0], observationVector[1]));
+    EXPECT_EQ(18.0, linearKernelFunctionCache.similarity(observationVector[0], observationVector[1]));
+
+
+    EXPECT_EQ(false, linearKernelFunction.rowNotCached(0));
+    EXPECT_EQ(false, linearKernelFunctionCache.rowNotCached(0));
+
+    EXPECT_EQ(true, linearKernelFunctionCache.rowNotCached(1));
+}
+
+
 // test SmoTrainer on eight data points
 TEST_F(EightPointDataset, SmoTrainerTrain) {
     OneVsOneMultiClassSvmTrainer::standardizeObservations(observationVector);
@@ -237,9 +276,10 @@ TEST_F(EightPointDataset, SmoTrainerTrain) {
         std::cout << std::endl;
     }
 
-    LinearKernelFunction linearKernelFunction;
+    LinearKernelFunction linearKernelFunction(observationVector);
+    KernelFunctionCache linearKernelFunctionCache(linearKernelFunction, observationVector);
     SmoTrainer t;
-    SVM* svm = t.train(&linearKernelFunction, observationVector);
+    SVM* svm = t.train(linearKernelFunctionCache, observationVector);
 
     EXPECT_EQ(-1, svm->discriminant(x_blue_0));
     EXPECT_EQ( 1, svm->discriminant(x_green_0));
@@ -271,13 +311,20 @@ TEST(ParameterSetBuilder, Construct) {
     m["a"].push_back(3);
     m["b"].push_back(1);
     m["b"].push_back(2);
-    m["b"].push_back(3);
+    //m["b"].push_back(3);
     m["c"].push_back(1);
-    m["c"].push_back(2);
-    m["c"].push_back(3);
+    //m["c"].push_back(2);
+    //m["c"].push_back(3);
 
     int parameterSetCount = 0;
 
+    // ParameterSetBuilder should construct these sets:
+    //    {a:1, b:1, c:1}
+    //    {a:1, b:2, c:1}
+    //    {a:2, b:1, c:1}
+    //    {a:2, b:2, c:1}
+    //    {a:3, b:1, c:1}
+    //    {a:3, b:2, c:1}
     ParameterSetBuilder p(m);
     ParameterMapVector::const_iterator i = p.getParameterSetList().begin();
     for (; i != p.getParameterSetList().end(); i++) {
@@ -288,7 +335,7 @@ TEST(ParameterSetBuilder, Construct) {
         parameterSetCount++;
     }
 
-    EXPECT_EQ(27, parameterSetCount);
+    EXPECT_EQ(6, parameterSetCount);
 }
 
 // use the eight point dataset fixture

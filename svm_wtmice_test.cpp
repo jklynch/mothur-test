@@ -18,6 +18,43 @@
 MothurOut* MothurOut::_uniqueInstance = 0;
 
 
+class MouseDataFixture : public testing::Test {
+public:
+    MothurOut* m = MothurOut::getInstance();
+
+    LabeledObservationVector labeledObservationVector;
+    FeatureVector featureVector;
+
+    SvmDataset* svmDataset;
+
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    OneVsOneMultiClassSvmTrainer* trainer;
+
+    virtual void SetUp() {
+        ClassifySvmSharedCommand classifySvmSharedCommand;
+
+        labeledObservationVector.clear();
+        featureVector.clear();
+
+        std::cout << "testing wtmiceonly data" << std::endl;
+        std::string sharedFilePath = "~/gsoc2013/data/WTmiceonly_final.shared";
+        std::string designFilePath = "~/gsoc2013/data/WTmiceonly_final.design";
+        classifySvmSharedCommand.readSharedAndDesignFiles(sharedFilePath, designFilePath, labeledObservationVector, featureVector);
+
+        svmDataset = new SvmDataset(labeledObservationVector, featureVector);
+
+        int evaluationFoldCount = 3;
+        int trainFoldCount = 10;
+        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+    }
+
+    virtual void TearDown() {
+        delete trainer;
+        delete svmDataset;
+    }
+};
+/*
 TEST(OneVsOneMultiClassSvmTrainer, WtMiceData) {
     MothurOut* m = MothurOut::getInstance();
     ClassifySvmSharedCommand classifySvmSharedCommand;
@@ -51,5 +88,40 @@ TEST(OneVsOneMultiClassSvmTrainer, WtMiceData) {
 
     for (LabeledObservationVector::iterator i = labeledObservationVector.begin(); i != labeledObservationVector.end(); i++) {
         delete i->second;
+    }
+}
+*/
+
+TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainer) {
+    EXPECT_EQ(113, labeledObservationVector.size());
+
+    EXPECT_EQ(4, trainer->getLabelSet().size());
+    EXPECT_EQ(6, trainer->getLabelPairSet().size());
+
+    KernelParameterRangeMap kernelParameterRangeMap;
+    getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
+
+    MultiClassSVM* s = trainer->train(kernelParameterRangeMap);
+    std::cout << "in the WTmice test - done training" << std::endl;
+
+    delete s;
+}
+
+// SmoTrainer C does not seem to be important here
+// LinearKernelFunction constant range does not seem to be important here
+TEST_F(MouseDataFixture, SvmRfe) {
+    SvmRfe svmRfe;
+    double constantRangeList[] = {0.0};
+    ParameterRange linearConstantRange(constantRangeList, constantRangeList + 1);
+    double smoCRangeList[] = {10.0, 1.0, 0.1};
+    ParameterRange smoCRange(smoCRangeList, smoCRangeList + 3);
+    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, smoCRange);
+
+    int n = 0;
+    std::cout << "ordered features:" << std::endl;
+    for (FeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
+        std::cout << i->getFeatureLabel() << std::endl;
+        n++;
+        if (n > 20) break;
     }
 }
