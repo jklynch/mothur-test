@@ -101,7 +101,9 @@ TEST(SmoTrainer, AssignNumericLabels) {
     std::vector<double> y;
     NumericClassToLabel discriminantToLabel;
 
-    SmoTrainer t;
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    SmoTrainer t(externalInterruption);
     t.assignNumericLabels(y, labelVector, discriminantToLabel);
 
     EXPECT_EQ(4, y.size());
@@ -131,7 +133,10 @@ TEST(SmoTrainer, MoreThanTwoLabels) {
 
     std::vector<double> y;
     NumericClassToLabel discriminantToLabel;
-    SmoTrainer t;
+
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    SmoTrainer t(externalInterruption);
     EXPECT_THROW(t.assignNumericLabels(y, oneLabelVector, discriminantToLabel), SmoTrainerException);
     EXPECT_THROW(t.assignNumericLabels(y, threeLabelsVector, discriminantToLabel), SmoTrainerException);
 }
@@ -278,7 +283,10 @@ TEST_F(EightPointDataset, SmoTrainerTrain) {
 
     LinearKernelFunction linearKernelFunction(observationVector);
     KernelFunctionCache linearKernelFunctionCache(linearKernelFunction, observationVector);
-    SmoTrainer t;
+
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    SmoTrainer t(externalInterruption);
     SVM* svm = t.train(linearKernelFunctionCache, observationVector);
 
     EXPECT_EQ(-1, svm->discriminant(x_blue_0));
@@ -297,7 +305,10 @@ TEST(SmoTrainer, ElementwiseMultiply) {
     std::vector<double> a(2, 2.0);
     std::vector<double> b(2, 0.5);
     std::vector<double> c(2);
-    SmoTrainer t;
+
+    ExternalSvmTrainingInterruption externalInterruption;
+
+    SmoTrainer t(externalInterruption);
     t.elementwise_multiply(a, b, c);
     EXPECT_EQ(1.0, c[0]);
     EXPECT_EQ(1.0, c[1]);
@@ -598,28 +609,24 @@ TEST(OneVsOneMultiClassSvmTrainer, GetLabelSet) {
 
 class TestExternalSvmTrainingInterruption : public ExternalSvmTrainingInterruption {
 public:
-    bool interruptTraining() { return true; }
+    bool interruptTraining() { std::cout << "ha!" << std::endl;  return true; }
 };
 
-TEST(OneVsOneMultiClassSvmTrainer, ExternalSvmTrainingInterruption) {
+TEST_F(EightPointDataset, OneVsOneMultiClassSvmTrainer_ExternalSvmTrainingInterruption) {
     MothurOut* m = MothurOut::getInstance();
     ClassifySvmSharedCommand classifySvmSharedCommand;
 
     LabeledObservationVector labeledObservationVector;
     FeatureVector featureVector;
 
-    classifySvmSharedCommand.readSharedAndDesignFiles("test.shared", "test.design", labeledObservationVector, featureVector);
-    SvmDataset svmDataset(labeledObservationVector, featureVector);
-    EXPECT_EQ(2, labeledObservationVector.size());
+    int evaluationFoldCount = 2;
+    int trainFoldCount = 2;
+    TestExternalSvmTrainingInterruption testExternalInterruption;
 
-    int evaluationFoldCount = 3;
-    int trainFoldCount = 5;
-    TestExternalSvmTrainingInterruption externalInterruption;
-
-    OneVsOneMultiClassSvmTrainer t(svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+    OneVsOneMultiClassSvmTrainer t(*svmDataset, evaluationFoldCount, trainFoldCount, testExternalInterruption, true);
 
     KernelParameterRangeMap kernelParameterRangeMap;
     getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
 
-    EXPECT_THROW(t.train(kernelParameterRangeMap), std::exception);
+    EXPECT_THROW(t.train(kernelParameterRangeMap), SvmTrainingInterruptedException);
 }
