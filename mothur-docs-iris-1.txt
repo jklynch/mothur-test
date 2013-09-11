@@ -1,0 +1,3 @@
+classifysvm.shared(shared=iris.shared,design=iris.design)
+classifysvm.shared(shared=iris.shared,design=iris.design,evaluationfolds=2,trainingfolds=3)
+

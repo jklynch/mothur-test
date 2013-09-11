@@ -31,6 +31,7 @@ CPPFLAGS += -I$(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
 # -g and -O1 for valgrind, -g for perf
+# also try without -O1 for perf
 CXXFLAGS += -g -O1 -Wall -Wextra
 
 CXXFLAGS += -DUSE_READLINE
