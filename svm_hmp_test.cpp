@@ -37,16 +37,19 @@ public:
         labeledObservationVector.clear();
         featureVector.clear();
 
+        OutputFilter outputFilter(OutputFilter::QUIET);
+
         std::cout << "testing hmp data" << std::endl;
         std::string sharedFilePath = "~/gsoc2013/data/Stool.0.03.subsample.0.03.filter.shared";
         std::string designFilePath = "~/gsoc2013/data/Stool.0.03.subsample.0.03.filter.mix.design";
         classifySvmSharedCommand.readSharedAndDesignFiles(sharedFilePath, designFilePath, labeledObservationVector, featureVector);
-
+        transformZeroOne(labeledObservationVector);
         svmDataset = new SvmDataset(labeledObservationVector, featureVector);
 
-        int evaluationFoldCount = 5;
-        int trainFoldCount = 10;
-        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+        int evaluationFoldCount = 3;
+        int trainFoldCount = 5;
+        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption, outputFilter);
+
     }
 
     virtual void TearDown() {
@@ -55,7 +58,24 @@ public:
     }
 };
 
-TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainer) {
+TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainerTransformZeroOne) {
+    //transformZeroOne(labeledObservationVector);
+    EXPECT_EQ(596, labeledObservationVector.size());
+
+    EXPECT_EQ(3, trainer->getLabelSet().size());
+    EXPECT_EQ(3, trainer->getLabelPairSet().size());
+
+    KernelParameterRangeMap kernelParameterRangeMap;
+    getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
+
+    MultiClassSVM* s = trainer->train(kernelParameterRangeMap);
+    std::cout << "in the HMP test - done training" << std::endl;
+
+    delete s;
+}
+
+TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainerTransformZeroMeanUnitVariance) {
+    transformZeroMeanUnitVariance(labeledObservationVector);
     EXPECT_EQ(596, labeledObservationVector.size());
 
     EXPECT_EQ(3, trainer->getLabelSet().size());

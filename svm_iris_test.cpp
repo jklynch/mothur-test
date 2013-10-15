@@ -43,9 +43,11 @@ public:
 
         svmDataset = new SvmDataset(labeledObservationVector, featureVector);
 
+        OutputFilter outputFilter(OutputFilter::QUIET);
+
         int evaluationFoldCount = 3;
         int trainFoldCount = 5;
-        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption, outputFilter);
     }
 
     virtual void TearDown() {

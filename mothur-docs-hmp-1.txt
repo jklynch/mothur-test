@@ -1,2 +1,2 @@
-classifysvm.shared(shared=../data/Stool.0.03.subsample.0.03.filter.shared,design=../data/Stool.0.03.subsample.0.03.filter.mix.design)
+classify.svm(shared=../data/Stool.0.03.subsample.0.03.filter.shared,design=../data/Stool.0.03.subsample.0.03.filter.mix.design)
 

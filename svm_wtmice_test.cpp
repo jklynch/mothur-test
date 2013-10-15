@@ -44,9 +44,11 @@ public:
 
         svmDataset = new SvmDataset(labeledObservationVector, featureVector);
 
+        OutputFilter outputFilter(OutputFilter::QUIET);
+
         int evaluationFoldCount = 3;
-        int trainFoldCount = 10;
-        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption);
+        int trainFoldCount = 5;
+        trainer = new OneVsOneMultiClassSvmTrainer(*svmDataset, evaluationFoldCount, trainFoldCount, externalInterruption, outputFilter);
     }
 
     virtual void TearDown() {
@@ -92,7 +94,25 @@ TEST(OneVsOneMultiClassSvmTrainer, WtMiceData) {
 }
 */
 
-TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainer) {
+TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainerZeroOne) {
+    transformZeroOne(labeledObservationVector);
+    EXPECT_EQ(113, labeledObservationVector.size());
+
+    EXPECT_EQ(4, trainer->getLabelSet().size());
+    EXPECT_EQ(6, trainer->getLabelPairSet().size());
+
+    KernelParameterRangeMap kernelParameterRangeMap;
+    getDefaultKernelParameterRangeMap(kernelParameterRangeMap);
+
+    MultiClassSVM* s = trainer->train(kernelParameterRangeMap);
+    std::cout << "in the WTmice test - done training" << std::endl;
+
+    delete s;
+}
+
+
+TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainerZeroMeanUnitVariance) {
+    transformZeroMeanUnitVariance(labeledObservationVector);
     EXPECT_EQ(113, labeledObservationVector.size());
 
     EXPECT_EQ(4, trainer->getLabelSet().size());
