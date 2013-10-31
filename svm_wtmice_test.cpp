@@ -112,7 +112,7 @@ TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainerZeroOne) {
 
 
 TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainerZeroMeanUnitVariance) {
-    transformZeroMeanUnitVariance(labeledObservationVector);
+    transformZeroOne(labeledObservationVector);
     EXPECT_EQ(113, labeledObservationVector.size());
 
     EXPECT_EQ(4, trainer->getLabelSet().size());
@@ -130,17 +130,18 @@ TEST_F(MouseDataFixture, OneVsOneMultiClassSvmTrainerZeroMeanUnitVariance) {
 // SmoTrainer C does not seem to be important here
 // LinearKernelFunction constant range does not seem to be important here
 TEST_F(MouseDataFixture, SvmRfe) {
+    transformZeroOne(labeledObservationVector);
     SvmRfe svmRfe;
     double constantRangeList[] = {0.0};
     ParameterRange linearConstantRange(constantRangeList, constantRangeList + 1);
     double smoCRangeList[] = {10.0, 1.0, 0.1};
     ParameterRange smoCRange(smoCRangeList, smoCRangeList + 3);
-    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, smoCRange);
+    RankedFeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, smoCRange);
 
     int n = 0;
     std::cout << "ordered features:" << std::endl;
-    for (FeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
-        std::cout << i->getFeatureLabel() << std::endl;
+    for (RankedFeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
+        std::cout << i->getFeature().getFeatureLabel() << std::endl;
         n++;
         if (n > 20) break;
     }
