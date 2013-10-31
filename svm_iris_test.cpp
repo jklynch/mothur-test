@@ -80,11 +80,11 @@ TEST_F(FisherIrisDataFixture, OneVsOneMultiClassSvmTrainer) {
 
 TEST_F(FisherIrisDataFixture, SvmRfe) {
     SvmRfe svmRfe;
-    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, LinearKernelFunction::defaultConstantRange, SmoTrainer::defaultCRange);
+    RankedFeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, LinearKernelFunction::defaultConstantRange, SmoTrainer::defaultCRange);
 
     std::cout << "ordered features:" << std::endl;
-    for (FeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
-        std::cout << i->getFeatureLabel() << std::endl;
+    for (RankedFeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
+        std::cout << i->getFeature().getFeatureLabel() << " " << i->getRank() << std::endl;
     }
 
 }

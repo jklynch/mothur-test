@@ -95,12 +95,12 @@ TEST_F(HmpDataFixture, SvmRfe) {
     SvmRfe svmRfe;
     double constantRange[] = {0.0};
     ParameterRange linearConstantRange(constantRange, constantRange + 1);
-    FeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, SmoTrainer::defaultCRange);
+    RankedFeatureList orderedFeatureList = svmRfe.getOrderedFeatureList(*svmDataset, *trainer, linearConstantRange, SmoTrainer::defaultCRange);
 
     int n = 0;
     std::cout << "ordered features:" << std::endl;
-    for (FeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
-        std::cout << i->getFeatureLabel() << std::endl;
+    for (RankedFeatureList::iterator i = orderedFeatureList.begin(); i != orderedFeatureList.end(); i++) {
+        std::cout << i->getFeature().getFeatureLabel() << std::endl;
         n++;
         if (n > 20) break;
     }

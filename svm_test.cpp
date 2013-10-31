@@ -335,8 +335,8 @@ TEST(StdThreshold, StdThreshold) {
     Feature featureA(0, "feature A");
     Feature featureB(1, "feature B");
     Feature featureC(2, "feature C");
-    Feature featureD(2, "feature D");
-    Feature featureE(2, "feature E");
+    Feature featureD(3, "feature D");
+    Feature featureE(4, "feature E");
     FeatureVector featureVector;
     featureVector.push_back(featureA);
     featureVector.push_back(featureB);
@@ -349,11 +349,18 @@ TEST(StdThreshold, StdThreshold) {
     FeatureVector removedFeatureList = applyStdThreshold(0.5, observationVector, featureVector);
     EXPECT_EQ(2, observationVector[0].second->size());
     EXPECT_EQ("feature B", featureVector.at(0).getFeatureLabel());
+    EXPECT_EQ(0, featureVector.at(0).getFeatureIndex());
+
     EXPECT_EQ("feature D", featureVector.at(1).getFeatureLabel());
+    EXPECT_EQ(1, featureVector.at(1).getFeatureIndex());
+
     EXPECT_EQ(3, removedFeatureList.size());
+
     EXPECT_EQ("feature A", removedFeatureList.at(0).getFeatureLabel());
+    EXPECT_EQ(-1, removedFeatureList.at(0).getFeatureIndex());
     EXPECT_EQ("feature C", removedFeatureList.at(1).getFeatureLabel());
     EXPECT_EQ("feature E", removedFeatureList.at(2).getFeatureLabel());
+
 
 }
 
