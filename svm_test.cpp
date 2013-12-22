@@ -59,8 +59,8 @@ TEST(ClassifySvmSharedCommand, ReadSharedFile) {
     EXPECT_EQ(2, numObservations);
     int numFeatures = lookup[0]->getNumBins();
     EXPECT_EQ(5, numFeatures);
-    EXPECT_EQ("OTU_01", m->currentBinLabels[0]);
-    EXPECT_EQ("OTU_02", m->currentBinLabels[1]);
+    EXPECT_EQ("OTU_01", m->currentSharedBinLabels[0]);
+    EXPECT_EQ("OTU_02", m->currentSharedBinLabels[1]);
 }
 
 // I'm not sure the behavior of this test is correct
@@ -75,7 +75,7 @@ TEST(ClassifySvmSharedCommand, ReadSharedAndDesignFiles) {
 
     EXPECT_EQ(2, labeledObservationVector.size());
     EXPECT_EQ(0, featureVector[0].getFeatureIndex());
-    EXPECT_EQ(m->currentBinLabels[0], featureVector[0].getFeatureLabel());
+    EXPECT_EQ(m->currentSharedBinLabels[0], featureVector[0].getFeatureLabel());
     for (LabeledObservationVector::iterator i = labeledObservationVector.begin(); i != labeledObservationVector.end(); i++) {
         delete i->second;
     }
@@ -189,6 +189,76 @@ TEST(SmoTrainer, MoreThanTwoLabels) {
 }
 
 
+TEST(StdThreshold, StdThreshold) {
+    Observation x_blue_0;
+    Observation x_blue_1;
+    Observation x_blue_2;
+    Observation x_blue_3;
+
+    // feature B has low standard deviation
+
+    x_blue_0.push_back(0.0);
+    x_blue_0.push_back(3.0);
+    x_blue_0.push_back(0.0);
+    x_blue_0.push_back(3.0);
+    x_blue_0.push_back(0.0);
+
+    x_blue_1.push_back(0.0);
+    x_blue_1.push_back(2.0);
+    x_blue_1.push_back(0.0);
+    x_blue_1.push_back(2.0);
+    x_blue_1.push_back(0.0);
+
+    x_blue_2.push_back(0.0);
+    x_blue_2.push_back(1.0);
+    x_blue_2.push_back(0.0);
+    x_blue_2.push_back(1.0);
+    x_blue_2.push_back(0.0);
+
+    x_blue_3.push_back(0.0);
+    x_blue_3.push_back(0.0);
+    x_blue_3.push_back(0.0);
+    x_blue_3.push_back(0.0);
+    x_blue_3.push_back(0.0);
+
+    LabeledObservationVector observationVector;
+    observationVector.push_back(LabeledObservation(0, "blue", &x_blue_0));
+    observationVector.push_back(LabeledObservation(1, "blue", &x_blue_1));
+    observationVector.push_back(LabeledObservation(2, "blue", &x_blue_2));
+    observationVector.push_back(LabeledObservation(3, "blue", &x_blue_3));
+
+    Feature featureA(0, "feature A");
+    Feature featureB(1, "feature B");
+    Feature featureC(2, "feature C");
+    Feature featureD(3, "feature D");
+    Feature featureE(4, "feature E");
+    FeatureVector featureVector;
+    featureVector.push_back(featureA);
+    featureVector.push_back(featureB);
+    featureVector.push_back(featureC);
+    featureVector.push_back(featureD);
+    featureVector.push_back(featureE);
+
+    EXPECT_EQ(4, observationVector.size());
+    EXPECT_EQ(5, observationVector[0].second->size());
+    FeatureVector removedFeatureList = applyStdThreshold(0.5, observationVector, featureVector);
+    EXPECT_EQ(2, observationVector[0].second->size());
+    EXPECT_EQ("feature B", featureVector.at(0).getFeatureLabel());
+    EXPECT_EQ(0, featureVector.at(0).getFeatureIndex());
+
+    EXPECT_EQ("feature D", featureVector.at(1).getFeatureLabel());
+    EXPECT_EQ(1, featureVector.at(1).getFeatureIndex());
+
+    EXPECT_EQ(3, removedFeatureList.size());
+
+    EXPECT_EQ("feature A", removedFeatureList.at(0).getFeatureLabel());
+    EXPECT_EQ(-1, removedFeatureList.at(0).getFeatureIndex());
+    EXPECT_EQ("feature C", removedFeatureList.at(1).getFeatureLabel());
+    EXPECT_EQ("feature E", removedFeatureList.at(2).getFeatureLabel());
+
+
+}
+
 // this class is a testing fixture
 // with 8 data points in two classes, 'blue' and 'green'
 // this data is not perfectly separable, as can be seen below:
@@ -294,75 +364,6 @@ public:
     }
 };
 
-TEST(StdThreshold, StdThreshold) {
-    Observation x_blue_0;
-    Observation x_blue_1;
-    Observation x_blue_2;
-    Observation x_blue_3;
-
-    // feature B has low standard deviation
-
-    x_blue_0.push_back(0.0);
-    x_blue_0.push_back(3.0);
-    x_blue_0.push_back(0.0);
-    x_blue_0.push_back(3.0);
-    x_blue_0.push_back(0.0);
-
-    x_blue_1.push_back(0.0);
-    x_blue_1.push_back(2.0);
-    x_blue_1.push_back(0.0);
-    x_blue_1.push_back(2.0);
-    x_blue_1.push_back(0.0);
-
-    x_blue_2.push_back(0.0);
-    x_blue_2.push_back(1.0);
-    x_blue_2.push_back(0.0);
-    x_blue_2.push_back(1.0);
-    x_blue_2.push_back(0.0);
-
-    x_blue_3.push_back(0.0);
-    x_blue_3.push_back(0.0);
-    x_blue_3.push_back(0.0);
-    x_blue_3.push_back(0.0);
-    x_blue_3.push_back(0.0);
-
-    LabeledObservationVector observationVector;
-    observationVector.push_back(LabeledObservation(0, "blue", &x_blue_0));
-    observationVector.push_back(LabeledObservation(1, "blue", &x_blue_1));
-    observationVector.push_back(LabeledObservation(2, "blue", &x_blue_2));
-    observationVector.push_back(LabeledObservation(3, "blue", &x_blue_3));
-
-    Feature featureA(0, "feature A");
-    Feature featureB(1, "feature B");
-    Feature featureC(2, "feature C");
-    Feature featureD(3, "feature D");
-    Feature featureE(4, "feature E");
-    FeatureVector featureVector;
-    featureVector.push_back(featureA);
-    featureVector.push_back(featureB);
-    featureVector.push_back(featureC);
-    featureVector.push_back(featureD);
-    featureVector.push_back(featureE);
-
-    EXPECT_EQ(4, observationVector.size());
-    EXPECT_EQ(5, observationVector[0].second->size());
-    FeatureVector removedFeatureList = applyStdThreshold(0.5, observationVector, featureVector);
-    EXPECT_EQ(2, observationVector[0].second->size());
-    EXPECT_EQ("feature B", featureVector.at(0).getFeatureLabel());
-    EXPECT_EQ(0, featureVector.at(0).getFeatureIndex());
-
-    EXPECT_EQ("feature D", featureVector.at(1).getFeatureLabel());
-    EXPECT_EQ(1, featureVector.at(1).getFeatureIndex());
-
-    EXPECT_EQ(3, removedFeatureList.size());
-
-    EXPECT_EQ("feature A", removedFeatureList.at(0).getFeatureLabel());
-    EXPECT_EQ(-1, removedFeatureList.at(0).getFeatureIndex());
-    EXPECT_EQ("feature C", removedFeatureList.at(1).getFeatureLabel());
-    EXPECT_EQ("feature E", removedFeatureList.at(2).getFeatureLabel());
-
-
-}
 
 TEST_F(EightPointLabeledObservationVector, MinMax) {
     EXPECT_EQ(1.0, getMinimumFeatureValueForObservation(featureA.getFeatureIndex(), observationVector));
@@ -417,6 +418,30 @@ TEST_F(EightPointLabeledObservationVector, KernelFunctionCache) {
     EXPECT_EQ(true, linearKernelFunctionCache.rowNotCached(1));
 }
 
+
+class LinearSvmForEightPointDataset : public EightPointDataset {
+public:
+    SVM* svm;
+
+    virtual void SetUp() {
+        EightPointDataset::SetUp();
+        LinearKernelFunction linearKernelFunction(observationVector);
+        KernelFunctionCache linearKernelFunctionCache(linearKernelFunction, observationVector);
+
+        ExternalSvmTrainingInterruption externalInterruption;
+        OutputFilter outputFilter(OutputFilter::INFO);
+
+        SmoTrainer t(externalInterruption, outputFilter);
+        // the default C is 1.0 which results in misclassification of x_blue_1
+        t.setC(0.1);
+        svm = t.train(linearKernelFunctionCache, observationVector);
+    }
+
+    virtual void TearDown() {
+        delete svm;
+        EightPointDataset::TearDown();
+    }
+};
 
 // test SmoTrainer on eight data points
 TEST_F(EightPointDataset, SmoTrainerTrain) {
@@ -556,6 +581,29 @@ TEST_F(EightPointDataset, SmoTrainerSigmoidKernelTrain) {
     delete svm;
 }
 
+
+TEST_F(LinearSvmForEightPointDataset, SvmPerformanceSummary) {
+    LabelVector predictions;
+                                    //                 actual   prediction
+    predictions.push_back("blue");  // true negative   blue     blue
+    predictions.push_back("green"); // false positive  blue     green
+    predictions.push_back("blue");  // true negative   blue     blue
+    predictions.push_back("green"); // false positive  blue     green
+    predictions.push_back("blue");  // false negative  green    blue
+    predictions.push_back("green"); // true positive   green    green
+    predictions.push_back("blue");  // false negative  green    blue
+    predictions.push_back("green"); // true positive   green    green
+
+    SvmPerformanceSummary s(*svm, observationVector, predictions);
+
+    EXPECT_EQ("green", s.getPositiveClassLabel());
+    EXPECT_EQ("blue", s.getNegativeClassLabel());
+
+    EXPECT_EQ(0.5, s.getPrecision());
+    EXPECT_EQ(0.5, s.getRecall());
+    EXPECT_EQ(0.5, s.getF());
+    EXPECT_EQ(0.5, s.getAccuracy());
+}
 
 TEST(SmoTrainer, ElementwiseMultiply) {
     std::vector<double> a(2, 2.0);

@@ -2,6 +2,11 @@ I have had some memory problems imeadiately following running
 this command.  I replaced the execute function in classify.svm
 with the new one from classify.rf - that seems to have solved
 the problem with -O0, -O1 for just the svm code, and ???
+The memory problems seem to be solved by doing a make clean and
+recompiling everything.  It is probably not necessary to recompile
+every file but it works.
 
 classify.svm(shared=../data/Stool.0.03.subsample.0.03.filter.shared,design=../data/Stool.0.03.subsample.0.03.filter.mix.design)
+
+classify.svm(mode=classify,kernel=polynomial,shared=../data/Stool.0.03.subsample.0.03.filter.shared,design=../data/Stool.0.03.subsample.0.03.filter.mix.design)
 

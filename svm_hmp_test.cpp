@@ -37,7 +37,7 @@ public:
         labeledObservationVector.clear();
         featureVector.clear();
 
-        OutputFilter outputFilter(OutputFilter::QUIET);
+        OutputFilter outputFilter(OutputFilter::DEBUG);
 
         std::cout << "testing hmp data" << std::endl;
         std::string sharedFilePath = "~/gsoc2013/data/Stool.0.03.subsample.0.03.filter.shared";
@@ -90,7 +90,7 @@ TEST_F(HmpDataFixture, OneVsOneMultiClassSvmTrainerTransformZeroMeanUnitVariance
     delete s;
 }
 
-// using the more constants does make a difference in results
+// using more constants does make a difference in results
 TEST_F(HmpDataFixture, SvmRfe) {
     SvmRfe svmRfe;
     double constantRange[] = {0.0};
